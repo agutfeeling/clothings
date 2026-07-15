@@ -176,7 +176,7 @@
     .empty { text-align: center; padding: 60px 20px; color: var(--ink-soft); }
     .empty h3 { font-family: 'Fraunces', Georgia, serif; color: var(--ink); font-size: 20px; margin-bottom: 6px; }
   
-    /* Form */
+    /* Form Layout Elements */
     .form-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; max-width: 600px; }
     .field { margin-bottom: 14px; }
     .field label {
@@ -190,19 +190,19 @@
     }
     .field input[type=text], .field input[type=number], .field select { width: 100%; }
     
-    /* Dynamic Color Group Styling */
+    /* Dropdown/Dynamic Size Variant Rows */
     .color-group {
       background: #faf9f6;
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 14px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
     .color-group-header {
       display: flex;
       gap: 10px;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .color-group-header input[type=color] {
       width: 38px;
@@ -212,43 +212,41 @@
       padding: 2px;
       background: #fff;
     }
-    .color-group-header input[type=text] {
-      flex: 1;
-    }
+    .color-group-header input[type=text] { flex: 1; }
     
-    .size-selector-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    .size-adder-row {
+      display: flex;
       gap: 8px;
       margin-top: 8px;
-    }
-    .size-box {
-      border: 1px solid var(--line);
-      background: #fff;
+      align-items: center;
+      background: #f0ede6;
       padding: 6px 10px;
       border-radius: 6px;
+    }
+    .size-adder-row select { width: auto; padding: 5px 8px; font-size: 13px; }
+    
+    .added-sizes-list {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
+      margin-top: 8px;
     }
-    .size-label {
+    .added-size-row {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
+      gap: 12px;
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: 6px 10px;
+      border-radius: 6px;
     }
-    .size-box input[type=number] {
-      padding: 4px 6px;
-      font-size: 12px;
-      border-radius: 4px;
-    }
+    .added-size-name { font-weight: 600; font-size: 13px; width: 60px; }
+    .added-size-row input[type=number] { padding: 4px 8px; max-width: 90px; font-size: 13px; }
 
     .form-actions { display: flex; gap: 10px; margin-top: 16px; }
     .photo-row { display: flex; gap: 12px; align-items: center; }
   
-    /* Modal */
+    /* Modal configuration styles */
     .overlay {
       position: fixed;
       inset: 0;
@@ -346,7 +344,12 @@ function uid(){ return Date.now().toString(36) + Math.random().toString(36).slic
 const REGULAR_SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free size'];
 const DENIM_SIZES = ['28', '30', '32', '34', '36', '38', '40'];
 
-// Cloud Fetch Functions using REST API
+// Robust Data Sanitization Handler to prevent UI Crashes on 404/Null fields
+function esc(s){ 
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); 
+}
+
 async function cloudFetch(path) {
   try {
     const res = await fetch(`${FIREBASE_DB_URL}${path}.json`);
@@ -370,6 +373,7 @@ async function cloudPut(path, data) {
 }
   
 async function syncFromCloud(isBackground = false){
+  // Stop background sync if you are actively inside an input box typing out values
   if(isBackground && (modal !== null || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
     return; 
   }
@@ -393,7 +397,7 @@ async function syncFromCloud(isBackground = false){
   state.log = log.sort((a,b) => a.time - b.time);
   
   const rawBrand = await cloudFetch('brand');
-  state.brand = rawBrand || 'My Clothing Brand';
+  state.brand = typeof rawBrand === 'string' ? rawBrand : 'My Clothing Brand';
   
   state.ready = true;
   render();
@@ -409,11 +413,6 @@ function showToast(msg, isError){
 function totalStock(item){ return item.colors ? item.colors.reduce((s,c)=>s+c.qty,0) : 0; }
 function lowStockCount(){
   return state.items.filter(i => totalStock(i) <= 5).length;
-}
-
-function esc(s){ 
-  if (s === null || s === undefined) return '';
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); 
 }
   
 function thumbHtml(item, size){
@@ -448,7 +447,6 @@ function resizeImage(file, maxDim, quality){
   });
 }
 
-// Group colors by name & hex so editing loads them in grouped format
 function groupColors(colors) {
   const groups = {};
   if (!colors) return [];
@@ -462,23 +460,25 @@ function groupColors(colors) {
   return Object.values(groups);
 }
 
-function renderSizeSelectionGrid(sizeType, colorGroupIndex, selectedSizesMap) {
-  const sizes = sizeType === 'denim' ? DENIM_SIZES : REGULAR_SIZES;
-  selectedSizesMap = selectedSizesMap || {};
+function renderAddedSizeRow(size, qty) {
+  return `
+    <div class="added-size-row" data-size="${size}">
+      <span class="added-size-name">${size}</span>
+      <input type="number" class="c-size-qty" min="0" placeholder="Quantity" value="${qty !== undefined ? qty : 0}">
+      <button type="button" class="link remove-size-row" style="color:var(--danger); margin-left:auto;">Remove</button>
+    </div>
+  `;
+}
+
+function renderDropdownOptions(sizeType, existingSizes) {
+  const allSizes = sizeType === 'denim' ? DENIM_SIZES : REGULAR_SIZES;
+  const filtered = allSizes.filter(s => !existingSizes.includes(s));
   
-  return sizes.map(size => {
-    const qty = selectedSizesMap[size] !== undefined ? selectedSizesMap[size] : '';
-    const checked = selectedSizesMap[size] !== undefined;
-    return `
-      <div class="size-box">
-        <label class="size-label">
-          <input type="checkbox" class="c-size-check" value="${size}" ${checked ? 'checked' : ''}>
-          ${size}
-        </label>
-        <input type="number" class="c-size-qty" min="0" placeholder="Qty" value="${qty}" ${!checked ? 'disabled' : ''}>
-      </div>
-    `;
-  }).join('');
+  let html = `<option value="" disabled selected>+ Choose Size</option>`;
+  filtered.forEach(s => {
+    html += `<option value="${s}">${s}</option>`;
+  });
+  return html;
 }
 
 // ---------- RENDER ----------
@@ -521,7 +521,7 @@ function render(){
   
 function renderInventory(){
   const q = state.search.trim().toLowerCase();
-  const items = state.items.filter(i => i.name.toLowerCase().includes(q));
+  const items = state.items.filter(i => i.name && i.name.toLowerCase().includes(q));
   
   let html = `<div class="toolbar">
       <input type="search" class="search" id="searchInput" placeholder="Search items…" value="${esc(state.search)}" />
@@ -614,6 +614,8 @@ function renderAddForm(){
       <div id="colorGroupsWrap">`;
   
   colorGroups.forEach((group, gIdx)=>{
+    const existingSizesArray = Object.keys(group.sizes);
+    
     html += `
     <div class="color-group" data-idx="${gIdx}">
       <div class="color-group-header">
@@ -621,9 +623,16 @@ function renderAddForm(){
         <input type="text" class="g-name" placeholder="Color Name (e.g. Royal Blue)" value="${esc(group.name)}">
         <button type="button" class="ghost remove-color-group">✕ Remove Color</button>
       </div>
-      <div style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--ink-soft); margin-top:12px;">Select Sizes &amp; Enter Quantities</div>
-      <div class="size-selector-grid">
-        ${renderSizeSelectionGrid(sizeType, gIdx, group.sizes)}
+      
+      <div class="size-adder-row">
+        <span style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">Add Size variant:</span>
+        <select class="size-dropdown-selector">
+          ${renderDropdownOptions(sizeType, existingSizesArray)}
+        </select>
+      </div>
+
+      <div class="added-sizes-list">
+        ${existingSizesArray.map(sz => renderAddedSizeRow(sz, group.sizes[sz])).join('')}
       </div>
     </div>`;
   });
@@ -850,48 +859,65 @@ function attachHandlers(){
     });
   });
   
-  // FORM EVENTS
+  // DYNAMIC DROP-DOWN FORM LOGIC
   const colorGroupsWrap = document.getElementById('colorGroupsWrap');
   if(colorGroupsWrap){
     
-    // Switch sizes instantly when changing Item Sizing Type (Regular <-> Denim)
+    // When size structure profile switches (Regular <-> Denim), refresh options dropdown menu
     document.getElementById('f-sizeType')?.addEventListener('change', (e) => {
       const type = e.target.value;
-      document.querySelectorAll('.color-group').forEach((groupEl, gIdx) => {
-        const sizeGrid = groupEl.querySelector('.size-selector-grid');
-        // Extract current inputs so we don't lose typed quantity configurations during change
-        const currentVals = {};
-        groupEl.querySelectorAll('.size-box').forEach(box => {
-          const check = box.querySelector('.c-size-check');
-          if (check.checked) {
-            currentVals[check.value] = box.querySelector('.c-size-qty').value;
-          }
-        });
-        sizeGrid.innerHTML = renderSizeSelectionGrid(type, gIdx, currentVals);
-        attachDynamicSizeEvents(groupEl);
+      document.querySelectorAll('.color-group').forEach((groupEl) => {
+        const dropdown = groupEl.querySelector('.size-dropdown-selector');
+        const listRows = groupEl.querySelectorAll('.added-size-row');
+        const activeSizes = Array.from(listRows).map(r => r.dataset.size);
+        dropdown.innerHTML = renderDropdownOptions(type, activeSizes);
       });
     });
 
-    // Handle enabling/disabling of quantity inputs dynamically
-    function attachDynamicSizeEvents(parentEl) {
-      parentEl.querySelectorAll('.size-box').forEach(box => {
-        const checkbox = box.querySelector('.c-size-check');
-        const numInput = box.querySelector('.c-size-qty');
-        checkbox.addEventListener('change', () => {
-          numInput.disabled = !checkbox.checked;
-          if (checkbox.checked) {
-            numInput.focus();
-            if(!numInput.value) numInput.value = '0';
-          } else {
-            numInput.value = '';
-          }
-        });
+    // Binds events onto size lines inside a color group block
+    function attachSizeGroupInteraction(groupEl) {
+      const dropdown = groupEl.querySelector('.size-dropdown-selector');
+      const containerList = groupEl.querySelector('.added-sizes-list');
+
+      // Dropdown interaction selected
+      dropdown.addEventListener('change', (e) => {
+        const selectedSize = e.target.value;
+        if(!selectedSize) return;
+
+        // Inject new row structure inside group list layout
+        const rowHtml = renderAddedSizeRow(selectedSize, 0);
+        containerList.insertAdjacentHTML('beforeend', rowHtml);
+
+        // Update Dropdown Menu content options view
+        const sizeType = document.getElementById('f-sizeType').value;
+        const currentActiveRows = containerList.querySelectorAll('.added-size-row');
+        const activeSizes = Array.from(currentActiveRows).map(r => r.dataset.size);
+        dropdown.innerHTML = renderDropdownOptions(sizeType, activeSizes);
+
+        // Focus straight to newly spawned field quantity box instantly
+        const targetRow = containerList.querySelector(`[data-size="${selectedSize}"]`);
+        targetRow.querySelector('.c-size-qty').focus();
+      });
+
+      // Handle element removals using bubbling click patterns inside container list layout
+      containerList.addEventListener('click', (e) => {
+        if(e.target.classList.contains('remove-size-row')) {
+          const targetRow = e.target.closest('.added-size-row');
+          targetRow.remove();
+
+          // Refresh custom configuration choice lines inside drop menu setup
+          const sizeType = document.getElementById('f-sizeType').value;
+          const currentActiveRows = containerList.querySelectorAll('.added-size-row');
+          const activeSizes = Array.from(currentActiveRows).map(r => r.dataset.size);
+          dropdown.innerHTML = renderDropdownOptions(sizeType, activeSizes);
+        }
       });
     }
 
-    // Attach listener for initially loaded groups
+    // Bind initialization hooks to loaded elements across workspace profile view
     document.querySelectorAll('.color-group').forEach(groupEl => {
-      attachDynamicSizeEvents(groupEl);
+      attachSizeGroupInteraction(groupEl);
+      
       groupEl.querySelector('.remove-color-group').addEventListener('click', () => {
         if(document.querySelectorAll('.color-group').length > 1) {
           groupEl.remove();
@@ -901,7 +927,7 @@ function attachHandlers(){
       });
     });
 
-    // Add another whole color block
+    // Setup addition click configurations to mount additional whole color box controls
     document.getElementById('addColorGroup')?.addEventListener('click', ()=>{
       const type = document.getElementById('f-sizeType').value;
       const newIdx = document.querySelectorAll('.color-group').length;
@@ -915,14 +941,17 @@ function attachHandlers(){
           <input type="text" class="g-name" placeholder="Color Name (e.g. Royal Blue)">
           <button type="button" class="ghost remove-color-group">✕ Remove Color</button>
         </div>
-        <div style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--ink-soft); margin-top:12px;">Select Sizes &amp; Enter Quantities</div>
-        <div class="size-selector-grid">
-          ${renderSizeSelectionGrid(type, newIdx, {})}
+        <div class="size-adder-row">
+          <span style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">Add Size variant:</span>
+          <select class="size-dropdown-selector">
+            ${renderDropdownOptions(type, [])}
+          </select>
         </div>
+        <div class="added-sizes-list"></div>
       `;
       
       colorGroupsWrap.appendChild(tempDiv);
-      attachDynamicSizeEvents(tempDiv);
+      attachSizeGroupInteraction(tempDiv);
       
       tempDiv.querySelector('.remove-color-group').addEventListener('click', () => {
         if(document.querySelectorAll('.color-group').length > 1) {
@@ -969,7 +998,6 @@ function attachHandlers(){
       if(!name){ showToast('Item name is required', true); return; }
       if(isNaN(price) || price < 0){ showToast('Enter a valid price', true); return; }
       
-      // Flatten the grouped structure back into the array of variations format
       const colors = [];
       let missingColorName = false;
       let missingSelection = true;
@@ -983,19 +1011,16 @@ function attachHandlers(){
           return;
         }
 
-        groupEl.querySelectorAll('.size-box').forEach(box => {
-          const check = box.querySelector('.c-size-check');
-          if (check.checked) {
-            missingSelection = false;
-            const size = check.value;
-            const qtyVal = parseInt(box.querySelector('.c-size-qty').value, 10);
-            colors.push({
-              name: colorName,
-              hex: hex,
-              size: size,
-              qty: isNaN(qtyVal) ? 0 : qtyVal
-            });
-          }
+        groupEl.querySelectorAll('.added-size-row').forEach(row => {
+          missingSelection = false;
+          const size = row.dataset.size;
+          const qtyVal = parseInt(row.querySelector('.c-size-qty').value, 10);
+          colors.push({
+            name: colorName,
+            hex: hex,
+            size: size,
+            qty: isNaN(qtyVal) ? 0 : qtyVal
+          });
         });
       });
 
@@ -1004,7 +1029,7 @@ function attachHandlers(){
         return;
       }
       if(missingSelection) {
-        showToast('Please check at least one size and quantity for your colors', true);
+        showToast('Please select at least one size variant and quantity for your color groups.', true);
         return;
       }
   
@@ -1028,6 +1053,7 @@ function attachHandlers(){
   }
 }
 
+// Fixed background data pull interval checking logic
 setInterval(() => syncFromCloud(true), 8000);
 syncFromCloud();
 </script>
