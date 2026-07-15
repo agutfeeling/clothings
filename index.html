@@ -278,14 +278,12 @@
 </head>
 <body>
 
-<div id="app"><div class="loading">Loading inventory…</div></div>
+<div id="app"><div class="loading">Loading cloud inventory sync…</div></div>
   
 <script>
-const INDEX_KEY = 'items-index';
-const LOG_KEY = 'sales-log';
-const BRAND_KEY = 'brand-name';
-const itemKey = id => `item:${id}`;
-  
+// Paste your Firebase Database link below (Make sure it ends with a slash / or matches the format exactly)
+const FIREBASE_DB_URL = https://console.firebase.google.com/project/clothing-inventory-dc4f3/database/clothing-inventory-dc4f3-default-rtdb/data/~2F;
+
 let state = { 
   items: [], 
   log: [], 
@@ -302,58 +300,54 @@ let modal = null;
 let toastMsg = null, toastTimer = null;
   
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-  
-async function loadAll(){
+
+// Cloud Fetch Functions using REST API
+async function cloudFetch(path) {
   try {
-    const ids = JSON.parse(localStorage.getItem(INDEX_KEY)) || [];
-    const items = [];
-    for(const id of ids){
-      const val = localStorage.getItem(itemKey(id));
-      if(val) items.push(JSON.parse(val));
-    }
-    state.items = items;
-  } catch(e){ state.items = []; }
-  
+    const res = await fetch(`${FIREBASE_DB_URL}${path}.json`);
+    return await res.json();
+  } catch (e) {
+    console.error("Fetch error:", e);
+    return null;
+  }
+}
+
+async function cloudPut(path, data) {
   try {
-    const val = localStorage.getItem(LOG_KEY);
-    state.log = val ? JSON.parse(val) : [];
-  } catch(e){ state.log = []; }
+    await fetch(`${FIREBASE_DB_URL}${path}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+  } catch (e) {
+    showToast('Network error syncing to database', true);
+  }
+}
   
-  try {
-    const val = localStorage.getItem(BRAND_KEY);
-    state.brand = val ? JSON.parse(val) : 'My Clothing Brand';
-  } catch(e){ state.brand = 'My Clothing Brand'; }
+async function syncFromCloud(){
+  const rawItems = await cloudFetch('items');
+  const items = [];
+  if (rawItems) {
+    Object.keys(rawItems).forEach(id => {
+      if (rawItems[id]) items.push(rawItems[id]);
+    });
+  }
+  state.items = items;
+  
+  const rawLog = await cloudFetch('log');
+  const log = [];
+  if (rawLog) {
+    Object.keys(rawLog).forEach(id => {
+      if (rawLog[id]) log.push(rawLog[id]);
+    });
+  }
+  state.log = log.sort((a,b) => a.time - b.time);
+  
+  const rawBrand = await cloudFetch('brand');
+  state.brand = rawBrand || 'My Clothing Brand';
   
   state.ready = true;
   render();
-}
-  
-function saveItem(item){
-  try { localStorage.setItem(itemKey(item.id), JSON.stringify(item)); }
-  catch(e){ showToast('Could not save item locally', true); }
-}
-
-function saveIndex(){
-  try { localStorage.setItem(INDEX_KEY, JSON.stringify(state.items.map(i=>i.id))); }
-  catch(e){ showToast('Could not save inventory list', true); }
-}
-
-function deleteItemStorage(id){
-  try { 
-    localStorage.removeItem(itemKey(id)); 
-    state.items = state.items.filter(i => i.id !== id);
-    saveIndex();
-  } catch(e){ showToast('Could not delete item', true); }
-}
-
-function saveLog(){
-  try { localStorage.setItem(LOG_KEY, JSON.stringify(state.log)); }
-  catch(e){ showToast('Could not save sale log', true); }
-}
-
-function saveBrand(){
-  try { localStorage.setItem(BRAND_KEY, JSON.stringify(state.brand)); }
-  catch(e){}
 }
   
 function showToast(msg, isError){
@@ -363,7 +357,7 @@ function showToast(msg, isError){
   toastTimer = setTimeout(()=>{ toastMsg = null; render(); }, 2600);
 }
   
-function totalStock(item){ return item.colors.reduce((s,c)=>s+c.qty,0); }
+function totalStock(item){ return item.colors ? item.colors.reduce((s,c)=>s+c.qty,0) : 0; }
 function lowStockCount(){
   return state.items.filter(i => totalStock(i) <= 5).length;
 }
@@ -403,25 +397,21 @@ function resizeImage(file, maxDim, quality){
 
 function getSizeOptions(type, selectedSize) {
   const regularSizes = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free size'];
-  const denimSizes = ['28', '30', '32', '34', '36', '38', '40', '42'];
+  const denimSizes = ['28', '30', '32', '34', '36', '38', '40'];
   const sizes = type === 'denim' ? denimSizes : regularSizes;
   return sizes.map(s => `<option value="${s}" ${s===selectedSize?'selected':''}>${s}</option>`).join('');
 }
-  
-window.addEventListener('storage', () => {
-  loadAll();
-});
 
 // ---------- RENDER ----------
 function render(){
   const app = document.getElementById('app');
-  if(!state.ready){ app.innerHTML = '<div class="loading">Loading inventory…</div>'; return; }
+  if(!state.ready){ app.innerHTML = '<div class="loading">Loading cloud inventory sync…</div>'; return; }
   
   let html = `
     <div class="brandbar">
       <input class="brand-name" id="brandInput" value="${esc(state.brand)}" />
     </div>
-    <div class="tagline">Stock &amp; sales tracker — everyone on the team sees the same numbers</div>
+    <div class="tagline">Cloud connected stock tracker — changes sync immediately for all devices</div>
   
     <nav class="tabs">
       <button data-tab="inventory" class="${state.tab==='inventory'?'active':''}">Inventory
@@ -436,7 +426,7 @@ function render(){
   if(state.tab === 'add') html += renderAddForm();
   if(state.tab === 'log') html += renderLog();
   
-  html += `<div class="footer-note">Data is shared with everyone who opens this tool. <button class="link" id="resetBtn">Reset all data</button></div>`;
+  html += `<div class="footer-note">Realtime backend connection configured. <button class="link" id="resetBtn">Reset cloud database</button></div>`;
   
   app.innerHTML = html;
   attachHandlers();
@@ -456,6 +446,7 @@ function renderInventory(){
   
   let html = `<div class="toolbar">
       <input type="search" class="search" id="searchInput" placeholder="Search items…" value="${esc(state.search)}" />
+      <button class="ghost" id="refreshBtn">🔄 Force Sync</button>
     </div>`;
   
   if(state.items.length === 0){
@@ -480,9 +471,11 @@ function renderInventory(){
       </div>
       <div class="total-stock">Total available: <b>${total}</b> piece${total===1?'':'s'}</div>
       <div class="chips">`;
-    for(const c of item.colors){
-      const cls = c.qty === 0 ? 'out' : (c.qty <= 5 ? 'low' : '');
-      html += `<div class="chip ${cls}"><span class="dot" style="background:${esc(c.hex)}"></span>${esc(c.name)} (${esc(c.size || 'Free size')}) · ${c.qty===0?'sold out':c.qty}</div>`;
+    if(item.colors){
+      for(const c of item.colors){
+        const cls = c.qty === 0 ? 'out' : (c.qty <= 5 ? 'low' : '');
+        html += `<div class="chip ${cls}"><span class="dot" style="background:${esc(c.hex)}"></span>${esc(c.name)} (${esc(c.size || 'Free size')}) · ${c.qty===0?'sold out':c.qty}</div>`;
+      }
     }
     html += `</div>
       <div class="card-actions">
@@ -581,17 +574,17 @@ function renderModal(){
   wrap.id = 'overlay';
   
   if(modal.type === 'sell'){
-    const inStock = item.colors.filter(c=>c.qty>0);
+    const inStock = item.colors ? item.colors.filter(c=>c.qty>0) : [];
     wrap.innerHTML = `<div class="modal">
       <div class="modal-title-row">${thumbHtml(item,44)}<h3>Sell — ${esc(item.name)}</h3></div>
       <div class="sub">Pick the exact variation being bought below.</div>
       <div class="color-pick">
-        ${item.colors.map((c, idx)=>`
+        ${item.colors ? item.colors.map((c, idx)=>`
           <label class="${c.qty===0?'disabled':''}">
             <input type="radio" name="sellVariantIdx" value="${idx}" ${c.qty===0?'disabled':''}>
             <span class="dot" style="background:${esc(c.hex)}"></span> ${esc(c.name)} — Size: <b>${esc(c.size || 'Free size')}</b>
             <span class="avail">${c.qty===0?'sold out':c.qty+' left'}</span>
-          </label>`).join('')}
+          </label>`).join('') : ''}
       </div>
       <div class="field"><label>Quantity to sell</label><input type="number" id="sellQty" min="1" value="1"></div>
       <div class="field"><label>Buyer / order note (optional)</label><input type="text" id="sellBuyer" placeholder="e.g. walk-in customer"></div>
@@ -606,12 +599,12 @@ function renderModal(){
       <div class="modal-title-row">${thumbHtml(item,44)}<h3>Restock — ${esc(item.name)}</h3></div>
       <div class="sub">Add pieces to existing variants.</div>
       <div id="restockRows">
-        ${item.colors.map((c,idx)=>`
+        ${item.colors ? item.colors.map((c,idx)=>`
           <div class="color-row" data-idx="${idx}">
             <span class="dot" style="background:${esc(c.hex)}"></span>
             <input type="text" value="${esc(c.name)} (${esc(c.size || 'Free size')})" disabled style="flex:1">
             <input type="number" class="restock-add" min="0" placeholder="+ add" style="width:80px">
-          </div>`).join('')}
+          </div>`).join('') : ''}
       </div>
       <div class="form-actions">
         <button class="primary" id="confirmRestock">Save restock</button>
@@ -624,7 +617,7 @@ function renderModal(){
   document.getElementById('closeModal')?.addEventListener('click', closeModal);
   
   if(modal.type === 'sell'){
-    document.getElementById('confirmSell').addEventListener('click', ()=>{
+    document.getElementById('confirmSell').addEventListener('click', async ()=>{
       const variantIdxInput = wrap.querySelector('input[name=sellVariantIdx]:checked');
       const qty = parseInt(document.getElementById('sellQty').value, 10);
       const buyer = document.getElementById('sellBuyer').value.trim();
@@ -637,23 +630,27 @@ function renderModal(){
       if(qty > color.qty){ showToast(`Only ${color.qty} left — can't sell ${qty}`, true); return; }
       
       color.qty -= qty;
-      state.log.push({
-        id: uid(), 
+      const logId = uid();
+      const saleLogEntry = {
+        id: logId, 
         time: Date.now(), 
         item: item.name, 
         color: `${color.name} (${color.size || 'Free size'})`, 
         qty, 
         price: Number(item.price), 
         buyer
-      });
-      saveItem(item); saveLog();
+      };
+      
+      await cloudPut(`items/${item.id}`, item);
+      await cloudPut(`log/${logId}`, saleLogEntry);
+      
       closeModal();
       showToast(`Sold ${qty} × ${color.name} (${color.size || 'Free size'}).`);
-      render();
+      syncFromCloud();
     });
   }
   if(modal.type === 'restock'){
-    document.getElementById('confirmRestock').addEventListener('click', ()=>{
+    document.getElementById('confirmRestock').addEventListener('click', async ()=>{
       const rows = wrap.querySelectorAll('#restockRows .color-row');
       let changed = false;
       rows.forEach(row=>{
@@ -662,10 +659,11 @@ function renderModal(){
         if(add && add > 0){ item.colors[idx].qty += add; changed = true; }
       });
       if(!changed){ showToast('Enter at least one quantity to add', true); return; }
-      saveItem(item);
+      
+      await cloudPut(`items/${item.id}`, item);
       closeModal();
       showToast('Restock saved');
-      render();
+      syncFromCloud();
     });
   }
 }
@@ -677,9 +675,10 @@ function closeModal(){
   
 // ---------- EVENT HANDLERS ----------
 function attachHandlers(){
-  document.getElementById('brandInput')?.addEventListener('change', e=>{
-    state.brand = e.target.value.trim() || 'My Clothing Brand';
-    saveBrand();
+  document.getElementById('brandInput')?.addEventListener('change', async e=>{
+    const newBrand = e.target.value.trim() || 'My Clothing Brand';
+    await cloudPut('brand', newBrand);
+    state.brand = newBrand;
   });
   
   document.querySelectorAll('nav.tabs button').forEach(b=>{
@@ -693,15 +692,20 @@ function attachHandlers(){
   document.getElementById('searchInput')?.addEventListener('input', e=>{
     state.search = e.target.value; render();
   });
+
+  document.getElementById('refreshBtn')?.addEventListener('click', ()=>{
+    syncFromCloud();
+    showToast('Data refreshed');
+  });
   
-  document.getElementById('resetBtn')?.addEventListener('click', () => {
+  document.getElementById('resetBtn')?.addEventListener('click', async () => {
     if(confirm('This clears all items and sales history for everyone. Are you sure?')){
-      localStorage.clear();
+      await fetch(`${FIREBASE_DB_URL}.json`, { method: 'DELETE' });
       state.items = []; 
       state.log = []; 
       state.brand = 'My Clothing Brand';
-      showToast('All system data cleared.');
-      render();
+      showToast('Cloud database cleared.');
+      syncFromCloud();
     }
   });
   
@@ -718,15 +722,15 @@ function attachHandlers(){
       }
       if(action === 'delete'){
         if(confirm(`Delete "${item.name}" from inventory? This can't be undone.`)){
-          deleteItemStorage(id);
-          showToast(`Deleted "${item.name}"`);
-          render();
+          fetch(`${FIREBASE_DB_URL}items/${id}.json`, { method: 'DELETE' }).then(()=>{
+            showToast(`Deleted "${item.name}"`);
+            syncFromCloud();
+          });
         }
       }
     });
   });
   
-  // Add / edit form configuration
   const colorRowsWrap = document.getElementById('colorRows');
   if(colorRowsWrap){
     document.getElementById('f-sizeType')?.addEventListener('change', (e) => {
@@ -800,26 +804,23 @@ function attachHandlers(){
         image = existing ? existing.image : null;
       }
   
-      if(state._editingId){
-        const item = state.items.find(i=>i.id===state._editingId);
-        item.name = name; item.price = price; item.sizeType = sizeType; item.colors = colors; item.image = image;
-        saveItem(item);
-        showToast('Item updated');
-      } else {
-        const item = {id:uid(), name, price, sizeType, colors, image};
-        state.items.push(item);
-        saveItem(item);
-        saveIndex();
-        showToast('Item added to inventory');
-      }
+      const itemId = state._editingId || uid();
+      const itemData = {id: itemId, name, price, sizeType, colors, image};
+      
+      await cloudPut(`items/${itemId}`, itemData);
+      showToast(state._editingId ? 'Item updated' : 'Item added to cloud inventory');
+      
       state._editingId = null; state._pendingImage = null; state._removePhoto = false;
       state.tab = 'inventory';
-      render();
+      syncFromCloud();
     });
   }
 }
+
+// Automatically poll cloud data every 8 seconds so workers see concurrent updates without reloading
+setInterval(syncFromCloud, 8000);
   
-loadAll();
+syncFromCloud();
 </script>
 </body>
 </html>
