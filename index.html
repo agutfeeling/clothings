@@ -403,7 +403,7 @@ function resizeImage(file, maxDim, quality){
 
 function getSizeOptions(type, selectedSize) {
   const regularSizes = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free size'];
-  const denimSizes = ['28', '30', '32', '34', '36', '38', '40'];
+  const denimSizes = ['28', '30', '32', '34', '36', '38', '40', '42'];
   const sizes = type === 'denim' ? denimSizes : regularSizes;
   return sizes.map(s => `<option value="${s}" ${s===selectedSize?'selected':''}>${s}</option>`).join('');
 }
