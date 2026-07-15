@@ -281,7 +281,6 @@
 <div id="app"><div class="loading">Loading cloud inventory sync…</div></div>
   
 <script>
-// Your Firebase Database link is already set up perfectly!
 const FIREBASE_DB_URL = "https://clothing-inventory-dc4f3-default-rtdb.asia-southeast1.firebasedatabase.app/";
 
 let state = { 
@@ -324,7 +323,12 @@ async function cloudPut(path, data) {
   }
 }
   
-async function syncFromCloud(){
+async function syncFromCloud(isBackground = false){
+  // If the user is currently editing or typing in a modal, do not re-render in background
+  if(isBackground && (modal !== null || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
+    return; 
+  }
+
   const rawItems = await cloudFetch('items');
   const items = [];
   if (rawItems) {
@@ -362,7 +366,6 @@ function lowStockCount(){
   return state.items.filter(i => totalStock(i) <= 5).length;
 }
 
-// FIXED ESCAPE FUNCTION TO AVOID CRASHES ON NULL/EMPTY VALUES
 function esc(s){ 
   if (s === null || s === undefined) return '';
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); 
@@ -458,38 +461,38 @@ function renderInventory(){
     html += `<div class="empty"><h3>No stock yet</h3><p>Add your first item to start tracking what's available.</p></div>`;
     return html;
   }
-  if(items.length === 0){
-    html += `<div class="empty"><h3>No matches</h3><p>Try a different search term.</p></div>`;
-    return html;
-  }
   
-  html += '<div class="grid">';
-  for(const item of items){
-    const total = totalStock(item);
-    html += `<div class="card">
-      <div class="card-head">
-        ${thumbHtml(item, 56)}
-        <div style="flex:1;min-width:0">
-          <div class="item-name">${esc(item.name)}</div>
-          <div class="price-tag" style="margin-top:4px">Rs. ${Number(item.price).toLocaleString()}</div>
+  html += '<div class="grid" id="inventoryGrid">';
+  if(items.length === 0){
+    html += `<div class="empty" id="noMatchesMsg"><h3>No matches</h3><p>Try a different search term.</p></div>`;
+  } else {
+    for(const item of items){
+      const total = totalStock(item);
+      html += `<div class="card" data-item-name="${esc(item.name.toLowerCase())}">
+        <div class="card-head">
+          ${thumbHtml(item, 56)}
+          <div style="flex:1;min-width:0">
+            <div class="item-name">${esc(item.name)}</div>
+            <div class="price-tag" style="margin-top:4px">Rs. ${Number(item.price).toLocaleString()}</div>
+          </div>
         </div>
-      </div>
-      <div class="total-stock">Total available: <b>${total}</b> piece${total===1?'':'s'}</div>
-      <div class="chips">`;
-    if(item.colors){
-      for(const c of item.colors){
-        const cls = c.qty === 0 ? 'out' : (c.qty <= 5 ? 'low' : '');
-        html += `<div class="chip ${cls}"><span class="dot" style="background:${esc(c.hex)}"></span>${esc(c.name)} (${esc(c.size || 'Free size')}) · ${c.qty===0?'sold out':c.qty}</div>`;
+        <div class="total-stock">Total available: <b>${total}</b> piece${total===1?'':'s'}</div>
+        <div class="chips">`;
+      if(item.colors){
+        for(const c of item.colors){
+          const cls = c.qty === 0 ? 'out' : (c.qty <= 5 ? 'low' : '');
+          html += `<div class="chip ${cls}"><span class="dot" style="background:${esc(c.hex)}"></span>${esc(c.name)} (${esc(c.size || 'Free size')}) · ${c.qty===0?'sold out':c.qty}</div>`;
+        }
       }
+      html += `</div>
+        <div class="card-actions">
+          <button class="primary" data-action="sell" data-id="${item.id}" ${total===0?'disabled':''}>Sell</button>
+          <button class="ghost" data-action="restock" data-id="${item.id}">Restock</button>
+          <button class="ghost" data-action="edit" data-id="${item.id}">Edit</button>
+          <button class="ghost" data-action="delete" data-id="${item.id}">Delete</button>
+        </div>
+      </div>`;
     }
-    html += `</div>
-      <div class="card-actions">
-        <button class="primary" data-action="sell" data-id="${item.id}" ${total===0?'disabled':''}>Sell</button>
-        <button class="ghost" data-action="restock" data-id="${item.id}">Restock</button>
-        <button class="ghost" data-action="edit" data-id="${item.id}">Edit</button>
-        <button class="ghost" data-action="delete" data-id="${item.id}">Delete</button>
-      </div>
-    </div>`;
   }
   html += '</div>';
   return html;
@@ -680,6 +683,7 @@ function closeModal(){
   
 // ---------- EVENT HANDLERS ----------
 function attachHandlers(){
+  // FIXED: Trigger save only when focus leaves the input, not while typing!
   document.getElementById('brandInput')?.addEventListener('change', async e=>{
     const newBrand = e.target.value.trim() || 'My Clothing Brand';
     await cloudPut('brand', newBrand);
@@ -694,8 +698,37 @@ function attachHandlers(){
     });
   });
   
+  // FIXED SEARCH: Directly toggle visibility of elements. No focus-killing re-renders!
   document.getElementById('searchInput')?.addEventListener('input', e=>{
-    state.search = e.target.value; render();
+    const query = e.target.value.trim().toLowerCase();
+    state.search = e.target.value; // Store value
+    
+    const cards = document.querySelectorAll('#inventoryGrid .card');
+    let visibleCount = 0;
+    
+    cards.forEach(card => {
+      const name = card.getAttribute('data-item-name') || '';
+      if (name.includes(query)) {
+        card.style.display = 'flex';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    // Toggle Empty State banner gracefully
+    let noMatch = document.getElementById('noMatchesMsg');
+    if (visibleCount === 0 && cards.length > 0) {
+      if(!noMatch) {
+        const msg = document.createElement('div');
+        msg.className = 'empty';
+        msg.id = 'noMatchesMsg';
+        msg.innerHTML = `<h3>No matches</h3><p>Try a different search term.</p>`;
+        document.getElementById('inventoryGrid').appendChild(msg);
+      }
+    } else if (noMatch) {
+      noMatch.remove();
+    }
   });
 
   document.getElementById('refreshBtn')?.addEventListener('click', ()=>{
@@ -822,8 +855,8 @@ function attachHandlers(){
   }
 }
 
-// Automatically poll cloud data every 8 seconds so workers see concurrent updates without reloading
-setInterval(syncFromCloud, 8000);
+// Automatically poll cloud data every 8 seconds, but prevent it from wiping inputs
+setInterval(() => syncFromCloud(true), 8000);
   
 syncFromCloud();
 </script>
