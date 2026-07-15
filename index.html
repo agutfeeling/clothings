@@ -281,7 +281,7 @@
 <div id="app"><div class="loading">Loading cloud inventory sync…</div></div>
   
 <script>
-// Paste your Firebase Database link below (Make sure it ends with a slash / or matches the format exactly)
+// Your Firebase Database link is already set up perfectly!
 const FIREBASE_DB_URL = "https://clothing-inventory-dc4f3-default-rtdb.firebaseio.com/";
 
 let state = { 
@@ -361,7 +361,12 @@ function totalStock(item){ return item.colors ? item.colors.reduce((s,c)=>s+c.qt
 function lowStockCount(){
   return state.items.filter(i => totalStock(i) <= 5).length;
 }
-function esc(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// FIXED ESCAPE FUNCTION TO AVOID CRASHES ON NULL/EMPTY VALUES
+function esc(s){ 
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); 
+}
   
 function thumbHtml(item, size){
   size = size || 56;
