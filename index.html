@@ -17,7 +17,7 @@
       --danger: #b5473f;
       --danger-soft: #f6e4e2;
       --amber-soft: #faf0da;
-      --radius: 10px;
+      --radius: 12px;
     }
     * { box-sizing: border-box; }
     body {
@@ -106,27 +106,34 @@
     button.link {
       background: none;
       border: none;
-      color: var(--ink-soft);
-      text-decoration: underline;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
       cursor: pointer;
       font-size: 13px;
       font-family: inherit;
       padding: 0;
     }
+    button.link:hover { text-decoration: underline; color: var(--accent-dark); }
     button:disabled { opacity: .45; cursor: not-allowed; }
   
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
     .card {
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      padding: 16px;
+      padding: 18px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    .card-head { display: flex; align-items: center; gap: 12px; }
-    .item-name { font-family: 'Fraunces', Georgia, serif; font-size: 17px; font-weight: 600; line-height: 1.25; }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.04);
+    }
+    .card-head { display: flex; align-items: center; gap: 14px; }
+    .item-name { font-family: 'Fraunces', Georgia, serif; font-size: 18px; font-weight: 600; line-height: 1.25; }
     .price-tag {
       font-family: 'IBM Plex Mono', monospace;
       background: var(--amber-soft);
@@ -139,7 +146,7 @@
       white-space: nowrap;
       display: inline-block;
     }
-    .total-stock { font-size: 12.5px; color: var(--ink-soft); }
+    .total-stock { font-size: 13px; color: var(--ink-soft); }
     .total-stock b { color: var(--ink); }
   
     .thumb { border-radius: 8px; object-fit: cover; border: 1px solid var(--line); flex-shrink: 0; background: #f2f0eb; }
@@ -155,23 +162,22 @@
       flex-shrink: 0;
     }
   
-    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-    .chip {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 4px 9px 4px 5px;
-      font-size: 12.5px;
-      font-family: 'IBM Plex Mono', monospace;
-    }
-    .dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); flex-shrink: 0; }
-    .chip.low { border-color: var(--gold); background: var(--amber-soft); }
-    .chip.out { border-color: var(--line); background: #f2f0eb; color: #a3998a; text-decoration: line-through; }
-  
-    .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
-    .card-actions button { flex: 1; min-width: 70px; }
+    /* Simplified Color Swatches Row */
+    .card-swatches { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+    .swatch-dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); display: inline-block; }
+    .swatch-wrapper { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-soft); background: #faf9f6; padding: 2px 8px; border-radius: 20px; border: 1px solid var(--line); }
+
+    /* Collapsible stock breakdown panel */
+    .breakdown-toggle-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; border-top: 1px solid var(--line); margin-top: 4px; padding-top: 8px; background: none; border-left: none; border-right: none; border-bottom: none; cursor: pointer; color: var(--accent); font-weight: 600; font-size: 13px; font-family: inherit; text-align: left; }
+    .breakdown-toggle-btn::after { content: '▾'; font-size: 10px; margin-left: 4px; }
+    .breakdown-toggle-btn.expanded::after { content: '▴'; }
+    .breakdown-panel { display: none; background: #faf9f6; border-radius: 8px; padding: 8px 12px; font-size: 13px; border: 1px solid var(--line); }
+    .breakdown-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed var(--line); }
+    .breakdown-row:last-child { border-bottom: none; }
+    .breakdown-row .dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); margin-right: 6px; display: inline-block; }
+
+    .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; padding-top: 8px; }
+    .card-actions button { flex: 1; min-width: 60px; padding: 8px 10px; font-size: 13px; }
   
     .empty { text-align: center; padding: 60px 20px; color: var(--ink-soft); }
     .empty h3 { font-family: 'Fraunces', Georgia, serif; color: var(--ink); font-size: 20px; margin-bottom: 6px; }
@@ -190,7 +196,7 @@
     }
     .field input[type=text], .field input[type=number], .field select { width: 100%; }
     
-    /* Dropdown/Dynamic Size Variant Rows */
+    /* Dropdown Variant Form Rows */
     .color-group {
       background: #faf9f6;
       border: 1px solid var(--line);
@@ -246,7 +252,7 @@
     .form-actions { display: flex; gap: 10px; margin-top: 16px; }
     .photo-row { display: flex; gap: 12px; align-items: center; }
   
-    /* Modal configuration styles */
+    /* Modal styles */
     .overlay {
       position: fixed;
       inset: 0;
@@ -373,7 +379,7 @@ async function cloudPut(path, data) {
 }
   
 async function syncFromCloud(isBackground = false){
-  // Stop background sync if you are actively inside an input box typing out values
+  // Stop background sync if actively typing or adding variations
   if(isBackground && (modal !== null || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
     return; 
   }
@@ -474,7 +480,7 @@ function renderDropdownOptions(sizeType, existingSizes) {
   const allSizes = sizeType === 'denim' ? DENIM_SIZES : REGULAR_SIZES;
   const filtered = allSizes.filter(s => !existingSizes.includes(s));
   
-  let html = `<option value="" disabled selected>+ Choose Size</option>`;
+  let html = `<option value="" disabled selected>+ Add Size Variant</option>`;
   filtered.forEach(s => {
     html += `<option value="${s}">${s}</option>`;
   });
@@ -539,6 +545,8 @@ function renderInventory(){
   } else {
     for(const item of items){
       const total = totalStock(item);
+      const colorGroups = groupColors(item.colors);
+      
       html += `<div class="card" data-item-name="${esc(item.name.toLowerCase())}">
         <div class="card-head">
           ${thumbHtml(item, 56)}
@@ -548,14 +556,32 @@ function renderInventory(){
           </div>
         </div>
         <div class="total-stock">Total available: <b>${total}</b> piece${total===1?'':'s'}</div>
-        <div class="chips">`;
-      if(item.colors){
-        for(const c of item.colors){
-          const cls = c.qty === 0 ? 'out' : (c.qty <= 5 ? 'low' : '');
-          html += `<div class="chip ${cls}"><span class="dot" style="background:${esc(c.hex)}"></span>${esc(c.name)} (${esc(c.size || 'Free size')}) · ${c.qty===0?'sold out':c.qty}</div>`;
-        }
-      }
-      html += `</div>
+        
+        <div class="card-swatches">
+          ${colorGroups.map(g => `
+            <div class="swatch-wrapper" title="${esc(g.name)}">
+              <span class="swatch-dot" style="background:${esc(g.hex)}"></span>
+              <span>${esc(g.name)}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        <button type="button" class="breakdown-toggle-btn" data-target="breakdown-${item.id}">
+          Stock Breakdown
+        </button>
+        <div class="breakdown-panel" id="breakdown-${item.id}">
+          ${colorGroups.map(g => `
+            <div class="breakdown-row">
+              <span style="display:flex; align-items:center; font-weight:600;">
+                <span class="dot" style="background:${esc(g.hex)}"></span>${esc(g.name)}
+              </span>
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--ink-soft);">
+                ${Object.entries(g.sizes).map(([sz, qty]) => `${sz}:<b>${qty}</b>`).join(', ')}
+              </span>
+            </div>
+          `).join('')}
+        </div>
+
         <div class="card-actions">
           <button class="primary" data-action="sell" data-id="${item.id}" ${total===0?'disabled':''}>Sell</button>
           <button class="ghost" data-action="restock" data-id="${item.id}">Restock</button>
@@ -625,7 +651,7 @@ function renderAddForm(){
       </div>
       
       <div class="size-adder-row">
-        <span style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">Add Size variant:</span>
+        <span style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">Add Size Variant:</span>
         <select class="size-dropdown-selector">
           ${renderDropdownOptions(sizeType, existingSizesArray)}
         </select>
@@ -790,6 +816,19 @@ function attachHandlers(){
     });
   });
   
+  // Handlers for dynamic collapsibles inside inventory cards
+  document.querySelectorAll('.breakdown-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-target');
+      const panel = document.getElementById(targetId);
+      if (panel) {
+        const isCollapsed = panel.style.display === 'none' || panel.style.display === '';
+        panel.style.display = isCollapsed ? 'block' : 'none';
+        btn.classList.toggle('expanded', isCollapsed);
+      }
+    });
+  });
+
   document.getElementById('searchInput')?.addEventListener('input', e=>{
     const query = e.target.value.trim().toLowerCase();
     state.search = e.target.value; 
@@ -859,11 +898,11 @@ function attachHandlers(){
     });
   });
   
-  // DYNAMIC DROP-DOWN FORM LOGIC
+  // DROP-DOWN FORM LOGIC FOR SIZES
   const colorGroupsWrap = document.getElementById('colorGroupsWrap');
   if(colorGroupsWrap){
     
-    // When size structure profile switches (Regular <-> Denim), refresh options dropdown menu
+    // Switch between Regular/Denim and refresh the dynamic options dropdown
     document.getElementById('f-sizeType')?.addEventListener('change', (e) => {
       const type = e.target.value;
       document.querySelectorAll('.color-group').forEach((groupEl) => {
@@ -874,38 +913,37 @@ function attachHandlers(){
       });
     });
 
-    // Binds events onto size lines inside a color group block
     function attachSizeGroupInteraction(groupEl) {
       const dropdown = groupEl.querySelector('.size-dropdown-selector');
       const containerList = groupEl.querySelector('.added-sizes-list');
 
-      // Dropdown interaction selected
+      // On Selecting a size variant from the dropdown
       dropdown.addEventListener('change', (e) => {
         const selectedSize = e.target.value;
         if(!selectedSize) return;
 
-        // Inject new row structure inside group list layout
+        // Insert new size input row
         const rowHtml = renderAddedSizeRow(selectedSize, 0);
         containerList.insertAdjacentHTML('beforeend', rowHtml);
 
-        // Update Dropdown Menu content options view
+        // Update dropdown options to remove already selected size
         const sizeType = document.getElementById('f-sizeType').value;
         const currentActiveRows = containerList.querySelectorAll('.added-size-row');
         const activeSizes = Array.from(currentActiveRows).map(r => r.dataset.size);
         dropdown.innerHTML = renderDropdownOptions(sizeType, activeSizes);
 
-        // Focus straight to newly spawned field quantity box instantly
+        // Instantly focus quantity input field for ease
         const targetRow = containerList.querySelector(`[data-size="${selectedSize}"]`);
         targetRow.querySelector('.c-size-qty').focus();
       });
 
-      // Handle element removals using bubbling click patterns inside container list layout
+      // Handle element removal
       containerList.addEventListener('click', (e) => {
         if(e.target.classList.contains('remove-size-row')) {
           const targetRow = e.target.closest('.added-size-row');
           targetRow.remove();
 
-          // Refresh custom configuration choice lines inside drop menu setup
+          // Refresh dropdown lists with freed up size values
           const sizeType = document.getElementById('f-sizeType').value;
           const currentActiveRows = containerList.querySelectorAll('.added-size-row');
           const activeSizes = Array.from(currentActiveRows).map(r => r.dataset.size);
@@ -914,7 +952,7 @@ function attachHandlers(){
       });
     }
 
-    // Bind initialization hooks to loaded elements across workspace profile view
+    // Bind existing size options on edit load
     document.querySelectorAll('.color-group').forEach(groupEl => {
       attachSizeGroupInteraction(groupEl);
       
@@ -927,7 +965,7 @@ function attachHandlers(){
       });
     });
 
-    // Setup addition click configurations to mount additional whole color box controls
+    // Handle addition of new color groups
     document.getElementById('addColorGroup')?.addEventListener('click', ()=>{
       const type = document.getElementById('f-sizeType').value;
       const newIdx = document.querySelectorAll('.color-group').length;
@@ -942,7 +980,7 @@ function attachHandlers(){
           <button type="button" class="ghost remove-color-group">✕ Remove Color</button>
         </div>
         <div class="size-adder-row">
-          <span style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">Add Size variant:</span>
+          <span style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">Add Size Variant:</span>
           <select class="size-dropdown-selector">
             ${renderDropdownOptions(type, [])}
           </select>
