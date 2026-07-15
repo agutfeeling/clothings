@@ -68,7 +68,7 @@
     }
   
     .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
-    input[type=text], input[type=number], input[type=search], select.c-size, select#f-sizeType {
+    input[type=text], input[type=number], input[type=search], select {
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 9px 11px;
@@ -176,8 +176,8 @@
     .empty { text-align: center; padding: 60px 20px; color: var(--ink-soft); }
     .empty h3 { font-family: 'Fraunces', Georgia, serif; color: var(--ink); font-size: 20px; margin-bottom: 6px; }
   
-    /* form */
-    .form-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; max-width: 560px; }
+    /* Form */
+    .form-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; max-width: 600px; }
     .field { margin-bottom: 14px; }
     .field label {
       display: block;
@@ -189,11 +189,22 @@
       letter-spacing: .04em;
     }
     .field input[type=text], .field input[type=number], .field select { width: 100%; }
-    .color-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-    .color-row input[type=text] { flex: 1; }
-    .color-row select.c-size { width: 110px; }
-    .color-row input[type=number] { width: 80px; }
-    .color-row input[type=color] {
+    
+    /* Dynamic Color Group Styling */
+    .color-group {
+      background: #faf9f6;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .color-group-header {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .color-group-header input[type=color] {
       width: 38px;
       height: 38px;
       border: 1px solid var(--line);
@@ -201,11 +212,43 @@
       padding: 2px;
       background: #fff;
     }
-    .color-row button { flex-shrink: 0; }
+    .color-group-header input[type=text] {
+      flex: 1;
+    }
+    
+    .size-selector-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .size-box {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .size-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .size-box input[type=number] {
+      padding: 4px 6px;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+
     .form-actions { display: flex; gap: 10px; margin-top: 16px; }
     .photo-row { display: flex; gap: 12px; align-items: center; }
   
-    /* modal */
+    /* Modal */
     .overlay {
       position: fixed;
       inset: 0;
@@ -300,6 +343,9 @@ let toastMsg = null, toastTimer = null;
   
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
+const REGULAR_SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free size'];
+const DENIM_SIZES = ['28', '30', '32', '34', '36', '38', '40'];
+
 // Cloud Fetch Functions using REST API
 async function cloudFetch(path) {
   try {
@@ -324,7 +370,6 @@ async function cloudPut(path, data) {
 }
   
 async function syncFromCloud(isBackground = false){
-  // If editing or typing in background, do not refresh and interrupt
   if(isBackground && (modal !== null || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
     return; 
   }
@@ -403,11 +448,37 @@ function resizeImage(file, maxDim, quality){
   });
 }
 
-function getSizeOptions(type, selectedSize) {
-  const regularSizes = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free size'];
-  const denimSizes = ['28', '30', '32', '34', '36', '38', '40'];
-  const sizes = type === 'denim' ? denimSizes : regularSizes;
-  return sizes.map(s => `<option value="${s}" ${s===selectedSize?'selected':''}>${s}</option>`).join('');
+// Group colors by name & hex so editing loads them in grouped format
+function groupColors(colors) {
+  const groups = {};
+  if (!colors) return [];
+  colors.forEach(c => {
+    const key = `${c.name}_${c.hex}`;
+    if (!groups[key]) {
+      groups[key] = { name: c.name, hex: c.hex, sizes: {} };
+    }
+    groups[key].sizes[c.size || 'Free size'] = c.qty;
+  });
+  return Object.values(groups);
+}
+
+function renderSizeSelectionGrid(sizeType, colorGroupIndex, selectedSizesMap) {
+  const sizes = sizeType === 'denim' ? DENIM_SIZES : REGULAR_SIZES;
+  selectedSizesMap = selectedSizesMap || {};
+  
+  return sizes.map(size => {
+    const qty = selectedSizesMap[size] !== undefined ? selectedSizesMap[size] : '';
+    const checked = selectedSizesMap[size] !== undefined;
+    return `
+      <div class="size-box">
+        <label class="size-label">
+          <input type="checkbox" class="c-size-check" value="${size}" ${checked ? 'checked' : ''}>
+          ${size}
+        </label>
+        <input type="number" class="c-size-qty" min="0" placeholder="Qty" value="${qty}" ${!checked ? 'disabled' : ''}>
+      </div>
+    `;
+  }).join('');
 }
 
 // ---------- RENDER ----------
@@ -500,21 +571,27 @@ function renderInventory(){
   
 function renderAddForm(){
   const editItem = state._editingId ? state.items.find(i=>i.id===state._editingId) : null;
-  const it = editItem || {name:'', price:'', sizeType: 'regular', colors:[{name:'', hex:'#1f6f5c', size: '', qty:''}], image:null};
   const isEdit = !!editItem;
-  const previewImage = state._removePhoto ? null : (state._pendingImage || it.image);
+  
+  const defaultGroup = [{name:'', hex:'#1f6f5c', sizes: {}}];
+  const colorGroups = editItem ? groupColors(editItem.colors) : defaultGroup;
+  const sizeType = editItem ? editItem.sizeType : 'regular';
+  const name = editItem ? editItem.name : '';
+  const price = editItem ? editItem.price : '';
+  
+  const previewImage = state._removePhoto ? null : (state._pendingImage || (editItem && editItem.image));
   
   let html = `<div class="form-card">
     <h3 style="font-family:'Fraunces',Georgia,serif;margin-top:0">${isEdit?'Edit item':'Add a new item'}</h3>
     <div class="field"><label>Item name</label>
-      <input type="text" id="f-name" placeholder="e.g. Slim Fit Denim Jeans" value="${esc(it.name)}"></div>
+      <input type="text" id="f-name" placeholder="e.g. Slim Fit Denim Jeans" value="${esc(name)}"></div>
     <div class="field"><label>Price per piece (Rs.)</label>
-      <input type="number" id="f-price" min="0" step="1" placeholder="e.g. 1500" value="${it.price}"></div>
+      <input type="number" id="f-price" min="0" step="1" placeholder="e.g. 1500" value="${price}"></div>
     
     <div class="field"><label>Item Type (For Sizing Options)</label>
       <select id="f-sizeType">
-        <option value="regular" ${it.sizeType==='regular'?'selected':''}>Regular Clothing (S, M, L, XL...)</option>
-        <option value="denim" ${it.sizeType==='denim'?'selected':''}>Denim / Jeans (28, 30, 32...)</option>
+        <option value="regular" ${sizeType==='regular'?'selected':''}>Regular Clothing (S, M, L, XL...)</option>
+        <option value="denim" ${sizeType==='denim'?'selected':''}>Denim / Jeans (28, 30, 32...)</option>
       </select>
     </div>
 
@@ -533,19 +610,26 @@ function renderAddForm(){
       </div>
     </div>
 
-    <div class="field"><label>Colours, Sizes &amp; quantity received</label>
-      <div id="colorRows">`;
-  it.colors.forEach((c)=>{
-    html += `<div class="color-row">
-      <input type="color" class="c-hex" value="${esc(c.hex||'#1f6f5c')}">
-      <input type="text" class="c-name" placeholder="Colour" value="${esc(c.name)}">
-      <select class="c-size">${getSizeOptions(it.sizeType, c.size)}</select>
-      <input type="number" class="c-qty" min="0" placeholder="Qty" value="${c.qty}">
-      <button type="button" class="ghost remove-color">✕</button>
+    <div class="field"><label>Colors &amp; Stock Levels</label>
+      <div id="colorGroupsWrap">`;
+  
+  colorGroups.forEach((group, gIdx)=>{
+    html += `
+    <div class="color-group" data-idx="${gIdx}">
+      <div class="color-group-header">
+        <input type="color" class="g-hex" value="${esc(group.hex)}">
+        <input type="text" class="g-name" placeholder="Color Name (e.g. Royal Blue)" value="${esc(group.name)}">
+        <button type="button" class="ghost remove-color-group">✕ Remove Color</button>
+      </div>
+      <div style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--ink-soft); margin-top:12px;">Select Sizes &amp; Enter Quantities</div>
+      <div class="size-selector-grid">
+        ${renderSizeSelectionGrid(sizeType, gIdx, group.sizes)}
+      </div>
     </div>`;
   });
+  
   html += `</div>
-      <button type="button" class="link" id="addColorRow">+ add another variant</button>
+      <button type="button" class="link" id="addColorGroup">+ Add Another Color</button>
     </div>
     <div class="form-actions">
       <button class="primary" id="saveItemBtn">${isEdit?'Save changes':'Add to inventory'}</button>
@@ -766,32 +850,87 @@ function attachHandlers(){
     });
   });
   
-  // FORM ELEMENT HANDLERS - ONLY bind these if form inputs are physically in the DOM
-  const colorRowsWrap = document.getElementById('colorRows');
-  if(colorRowsWrap){
+  // FORM EVENTS
+  const colorGroupsWrap = document.getElementById('colorGroupsWrap');
+  if(colorGroupsWrap){
+    
+    // Switch sizes instantly when changing Item Sizing Type (Regular <-> Denim)
     document.getElementById('f-sizeType')?.addEventListener('change', (e) => {
       const type = e.target.value;
-      document.querySelectorAll('#colorRows .c-size').forEach(select => {
-        const currentVal = select.value;
-        select.innerHTML = getSizeOptions(type, currentVal);
+      document.querySelectorAll('.color-group').forEach((groupEl, gIdx) => {
+        const sizeGrid = groupEl.querySelector('.size-selector-grid');
+        // Extract current inputs so we don't lose typed quantity configurations during change
+        const currentVals = {};
+        groupEl.querySelectorAll('.size-box').forEach(box => {
+          const check = box.querySelector('.c-size-check');
+          if (check.checked) {
+            currentVals[check.value] = box.querySelector('.c-size-qty').value;
+          }
+        });
+        sizeGrid.innerHTML = renderSizeSelectionGrid(type, gIdx, currentVals);
+        attachDynamicSizeEvents(groupEl);
       });
     });
 
-    document.getElementById('addColorRow')?.addEventListener('click', ()=>{
-      const type = document.getElementById('f-sizeType').value;
-      const row = document.createElement('div');
-      row.className = 'color-row';
-      row.innerHTML = `<input type="color" class="c-hex" value="#1f6f5c">
-        <input type="text" class="c-name" placeholder="Colour">
-        <select class="c-size">${getSizeOptions(type, '')}</select>
-        <input type="number" class="c-qty" min="0" placeholder="Qty">
-        <button type="button" class="ghost remove-color">✕</button>`;
-      colorRowsWrap.appendChild(row);
-      row.querySelector('.remove-color').addEventListener('click', ()=>row.remove());
+    // Handle enabling/disabling of quantity inputs dynamically
+    function attachDynamicSizeEvents(parentEl) {
+      parentEl.querySelectorAll('.size-box').forEach(box => {
+        const checkbox = box.querySelector('.c-size-check');
+        const numInput = box.querySelector('.c-size-qty');
+        checkbox.addEventListener('change', () => {
+          numInput.disabled = !checkbox.checked;
+          if (checkbox.checked) {
+            numInput.focus();
+            if(!numInput.value) numInput.value = '0';
+          } else {
+            numInput.value = '';
+          }
+        });
+      });
+    }
+
+    // Attach listener for initially loaded groups
+    document.querySelectorAll('.color-group').forEach(groupEl => {
+      attachDynamicSizeEvents(groupEl);
+      groupEl.querySelector('.remove-color-group').addEventListener('click', () => {
+        if(document.querySelectorAll('.color-group').length > 1) {
+          groupEl.remove();
+        } else {
+          showToast("You must keep at least one color variation.", true);
+        }
+      });
     });
 
-    document.querySelectorAll('.remove-color').forEach(b=>{
-      b.addEventListener('click', ()=>{ if(document.querySelectorAll('#colorRows .color-row').length>1) b.closest('.color-row').remove(); });
+    // Add another whole color block
+    document.getElementById('addColorGroup')?.addEventListener('click', ()=>{
+      const type = document.getElementById('f-sizeType').value;
+      const newIdx = document.querySelectorAll('.color-group').length;
+      
+      const tempDiv = document.createElement('div');
+      tempDiv.className = 'color-group';
+      tempDiv.dataset.idx = newIdx;
+      tempDiv.innerHTML = `
+        <div class="color-group-header">
+          <input type="color" class="g-hex" value="#1f6f5c">
+          <input type="text" class="g-name" placeholder="Color Name (e.g. Royal Blue)">
+          <button type="button" class="ghost remove-color-group">✕ Remove Color</button>
+        </div>
+        <div style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--ink-soft); margin-top:12px;">Select Sizes &amp; Enter Quantities</div>
+        <div class="size-selector-grid">
+          ${renderSizeSelectionGrid(type, newIdx, {})}
+        </div>
+      `;
+      
+      colorGroupsWrap.appendChild(tempDiv);
+      attachDynamicSizeEvents(tempDiv);
+      
+      tempDiv.querySelector('.remove-color-group').addEventListener('click', () => {
+        if(document.querySelectorAll('.color-group').length > 1) {
+          tempDiv.remove();
+        } else {
+          showToast("You must keep at least one color variation.", true);
+        }
+      });
     });
   
     document.getElementById('f-image-file')?.addEventListener('change', async (e)=>{
@@ -821,7 +960,7 @@ function attachHandlers(){
       const priceInput = document.getElementById('f-price');
       const sizeTypeInput = document.getElementById('f-sizeType');
       
-      if(!nameInput || !priceInput || !sizeTypeInput) return; // Guard clause
+      if(!nameInput || !priceInput || !sizeTypeInput) return;
       
       const name = nameInput.value.trim();
       const price = parseFloat(priceInput.value);
@@ -830,15 +969,44 @@ function attachHandlers(){
       if(!name){ showToast('Item name is required', true); return; }
       if(isNaN(price) || price < 0){ showToast('Enter a valid price', true); return; }
       
+      // Flatten the grouped structure back into the array of variations format
       const colors = [];
-      document.querySelectorAll('#colorRows .color-row').forEach(row=>{
-        const cname = row.querySelector('.c-name').value.trim();
-        const hex = row.querySelector('.c-hex').value;
-        const size = row.querySelector('.c-size').value;
-        const qty = parseInt(row.querySelector('.c-qty').value, 10);
-        if(cname) colors.push({name:cname, hex, size, qty: isNaN(qty)?0:qty});
+      let missingColorName = false;
+      let missingSelection = true;
+
+      document.querySelectorAll('.color-group').forEach(groupEl => {
+        const colorName = groupEl.querySelector('.g-name').value.trim();
+        const hex = groupEl.querySelector('.g-hex').value;
+        
+        if (!colorName) {
+          missingColorName = true;
+          return;
+        }
+
+        groupEl.querySelectorAll('.size-box').forEach(box => {
+          const check = box.querySelector('.c-size-check');
+          if (check.checked) {
+            missingSelection = false;
+            const size = check.value;
+            const qtyVal = parseInt(box.querySelector('.c-size-qty').value, 10);
+            colors.push({
+              name: colorName,
+              hex: hex,
+              size: size,
+              qty: isNaN(qtyVal) ? 0 : qtyVal
+            });
+          }
+        });
       });
-      if(colors.length === 0){ showToast('Add at least one variation', true); return; }
+
+      if(missingColorName) {
+        showToast('Please enter a name for all your added colors', true);
+        return;
+      }
+      if(missingSelection) {
+        showToast('Please check at least one size and quantity for your colors', true);
+        return;
+      }
   
       let image = null;
       if(state._pendingImage) image = state._pendingImage;
@@ -860,9 +1028,7 @@ function attachHandlers(){
   }
 }
 
-// Automatically poll cloud data every 8 seconds, but prevent it from wiping inputs
 setInterval(() => syncFromCloud(true), 8000);
-  
 syncFromCloud();
 </script>
 </body>
