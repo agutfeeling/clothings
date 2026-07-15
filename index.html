@@ -324,7 +324,7 @@ async function cloudPut(path, data) {
 }
   
 async function syncFromCloud(isBackground = false){
-  // If the user is currently editing or typing in a modal, do not re-render in background
+  // If editing or typing in background, do not refresh and interrupt
   if(isBackground && (modal !== null || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
     return; 
   }
@@ -683,7 +683,6 @@ function closeModal(){
   
 // ---------- EVENT HANDLERS ----------
 function attachHandlers(){
-  // FIXED: Trigger save only when focus leaves the input, not while typing!
   document.getElementById('brandInput')?.addEventListener('change', async e=>{
     const newBrand = e.target.value.trim() || 'My Clothing Brand';
     await cloudPut('brand', newBrand);
@@ -698,10 +697,9 @@ function attachHandlers(){
     });
   });
   
-  // FIXED SEARCH: Directly toggle visibility of elements. No focus-killing re-renders!
   document.getElementById('searchInput')?.addEventListener('input', e=>{
     const query = e.target.value.trim().toLowerCase();
-    state.search = e.target.value; // Store value
+    state.search = e.target.value; 
     
     const cards = document.querySelectorAll('#inventoryGrid .card');
     let visibleCount = 0;
@@ -716,7 +714,6 @@ function attachHandlers(){
       }
     });
 
-    // Toggle Empty State banner gracefully
     let noMatch = document.getElementById('noMatchesMsg');
     if (visibleCount === 0 && cards.length > 0) {
       if(!noMatch) {
@@ -769,6 +766,7 @@ function attachHandlers(){
     });
   });
   
+  // FORM ELEMENT HANDLERS - ONLY bind these if form inputs are physically in the DOM
   const colorRowsWrap = document.getElementById('colorRows');
   if(colorRowsWrap){
     document.getElementById('f-sizeType')?.addEventListener('change', (e) => {
@@ -779,7 +777,7 @@ function attachHandlers(){
       });
     });
 
-    document.getElementById('addColorRow').addEventListener('click', ()=>{
+    document.getElementById('addColorRow')?.addEventListener('click', ()=>{
       const type = document.getElementById('f-sizeType').value;
       const row = document.createElement('div');
       row.className = 'color-row';
@@ -806,21 +804,28 @@ function attachHandlers(){
         render();
       } catch(err){ showToast('Could not load that photo', true); }
     });
+    
     document.getElementById('removePhoto')?.addEventListener('click', ()=>{
       state._pendingImage = null;
       state._removePhoto = true;
       render();
     });
   
-    document.getElementById('cancelFormBtn').addEventListener('click', ()=>{
+    document.getElementById('cancelFormBtn')?.addEventListener('click', ()=>{
       state._editingId = null; state._pendingImage = null; state._removePhoto = false;
       state.tab = 'inventory'; render();
     });
   
-    document.getElementById('saveItemBtn').addEventListener('click', async ()=>{
-      const name = document.getElementById('f-name').value.trim();
-      const price = parseFloat(document.getElementById('f-price').value);
-      const sizeType = document.getElementById('f-sizeType').value;
+    document.getElementById('saveItemBtn')?.addEventListener('click', async ()=>{
+      const nameInput = document.getElementById('f-name');
+      const priceInput = document.getElementById('f-price');
+      const sizeTypeInput = document.getElementById('f-sizeType');
+      
+      if(!nameInput || !priceInput || !sizeTypeInput) return; // Guard clause
+      
+      const name = nameInput.value.trim();
+      const price = parseFloat(priceInput.value);
+      const sizeType = sizeTypeInput.value;
       
       if(!name){ showToast('Item name is required', true); return; }
       if(isNaN(price) || price < 0){ showToast('Enter a valid price', true); return; }
