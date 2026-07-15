@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory Management</title>
+  <style>
+    :root {
+      --bg: #f4f2ee;
+      --card: #ffffff;
+      --ink: #1e2420;
+      --ink-soft: #5b6660;
+      --line: #e3ddd2;
+      --accent: #1f6f5c;
+      --accent-dark: #164e42;
+      --gold: #c08a2e;
+      --danger: #b5473f;
+      --danger-soft: #f6e4e2;
+      --amber-soft: #faf0da;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    }
+    #app { max-width: 1080px; margin: 0 auto; padding: 20px 16px 60px; }
+  
+    .brandbar { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+    .brand-name {
+      font-family: 'Fraunces', Georgia, serif;
+      font-weight: 600;
+      font-size: 28px;
+      border: none;
+      background: none;
+      color: var(--ink);
+      padding: 2px 4px;
+      border-radius: 6px;
+      max-width: 60%;
+    }
+    .brand-name:focus { outline: 2px solid var(--accent); background: #fff; }
+    .tagline { color: var(--ink-soft); font-size: 13px; letter-spacing: .03em; }
+  
+    nav.tabs { display: flex; gap: 6px; margin: 18px 0 20px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+    nav.tabs button {
+      border: none;
+      background: none;
+      padding: 10px 14px;
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      font-family: inherit;
+    }
+    nav.tabs button.active { color: var(--accent-dark); border-bottom-color: var(--accent); }
+    nav.tabs button .badge {
+      background: var(--danger);
+      color: #fff;
+      border-radius: 20px;
+      font-size: 11px;
+      padding: 1px 6px;
+      margin-left: 6px;
+      font-weight: 700;
+    }
+  
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+    input[type=text], input[type=number], input[type=search], select.c-size, select#f-sizeType {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 11px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+      color: var(--ink);
+    }
+    input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .search { flex: 1; min-width: 180px; }
+  
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    button.primary:hover { background: var(--accent-dark); }
+    button.ghost {
+      background: none;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-size: 13.5px;
+      cursor: pointer;
+      color: var(--ink);
+      font-family: inherit;
+    }
+    button.ghost:hover { border-color: var(--accent); color: var(--accent-dark); }
+    button.link {
+      background: none;
+      border: none;
+      color: var(--ink-soft);
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      padding: 0;
+    }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+  
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .card-head { display: flex; align-items: center; gap: 12px; }
+    .item-name { font-family: 'Fraunces', Georgia, serif; font-size: 17px; font-weight: 600; line-height: 1.25; }
+    .price-tag {
+      font-family: 'IBM Plex Mono', monospace;
+      background: var(--amber-soft);
+      color: var(--gold);
+      border: 1px solid #ecd9ad;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      display: inline-block;
+    }
+    .total-stock { font-size: 12.5px; color: var(--ink-soft); }
+    .total-stock b { color: var(--ink); }
+  
+    .thumb { border-radius: 8px; object-fit: cover; border: 1px solid var(--line); flex-shrink: 0; background: #f2f0eb; }
+    .thumb-placeholder {
+      border-radius: 8px;
+      background: var(--amber-soft);
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fraunces', Georgia, serif;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+  
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 4px 9px 4px 5px;
+      font-size: 12.5px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); flex-shrink: 0; }
+    .chip.low { border-color: var(--gold); background: var(--amber-soft); }
+    .chip.out { border-color: var(--line); background: #f2f0eb; color: #a3998a; text-decoration: line-through; }
+  
+    .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+    .card-actions button { flex: 1; min-width: 70px; }
+  
+    .empty { text-align: center; padding: 60px 20px; color: var(--ink-soft); }
+    .empty h3 { font-family: 'Fraunces', Georgia, serif; color: var(--ink); font-size: 20px; margin-bottom: 6px; }
+  
+    /* form */
+    .form-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; max-width: 560px; }
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .field input[type=text], .field input[type=number], .field select { width: 100%; }
+    .color-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .color-row input[type=text] { flex: 1; }
+    .color-row select.c-size { width: 110px; }
+    .color-row input[type=number] { width: 80px; }
+    .color-row input[type=color] {
+      width: 38px;
+      height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 2px;
+      background: #fff;
+    }
+    .color-row button { flex-shrink: 0; }
+    .form-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .photo-row { display: flex; gap: 12px; align-items: center; }
+  
+    /* modal */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(20,20,15,.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 50;
+    }
+    .modal {
+      background: #fff;
+      border-radius: 14px;
+      padding: 22px;
+      max-width: 440px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal h3 { font-family: 'Fraunces', Georgia, serif; margin: 0; font-size: 20px; }
+    .modal-title-row { display: flex; gap: 10px; align-items: center; margin-bottom: 4px; }
+    .modal .sub { color: var(--ink-soft); font-size: 13px; margin-bottom: 16px; }
+    .color-pick { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .color-pick label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 11px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .color-pick label.disabled { opacity: .4; cursor: not-allowed; }
+    .color-pick input { margin: 0; }
+    .avail { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--ink-soft); }
+  
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th {
+      text-align: left;
+      color: var(--ink-soft);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    td { padding: 9px 10px; border-bottom: 1px solid var(--line); }
+    tr:last-child td { border-bottom: none; }
+    .log-wrap { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow-x: auto; }
+  
+    .toast {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent-dark);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 100;
+      box-shadow: 0 6px 20px rgba(0,0,0,.2);
+    }
+    .toast.error { background: var(--danger); }
+    .loading { text-align: center; padding: 60px; color: var(--ink-soft); }
+    .footer-note { text-align: center; color: var(--ink-soft); font-size: 12px; margin-top: 36px; }
+  </style>
+</head>
+<body>
+
+<div id="app"><div class="loading">Loading inventory…</div></div>
+  
+<script>
+const INDEX_KEY = 'items-index';
+const LOG_KEY = 'sales-log';
+const BRAND_KEY = 'brand-name';
+const itemKey = id => `item:${id}`;
+  
+let state = { 
+  items: [], 
+  log: [], 
+  brand: 'My Clothing Brand', 
+  tab: 'inventory', 
+  search: '', 
+  ready: false,
+  _editingId: null, 
+  _pendingImage: null, 
+  _removePhoto: false 
+};
+
+let modal = null;
+let toastMsg = null, toastTimer = null;
+  
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  
+async function loadAll(){
+  try {
+    const ids = JSON.parse(localStorage.getItem(INDEX_KEY)) || [];
+    const items = [];
+    for(const id of ids){
+      const val = localStorage.getItem(itemKey(id));
+      if(val) items.push(JSON.parse(val));
+    }
+    state.items = items;
+  } catch(e){ state.items = []; }
+  
+  try {
+    const val = localStorage.getItem(LOG_KEY);
+    state.log = val ? JSON.parse(val) : [];
+  } catch(e){ state.log = []; }
+  
+  try {
+    const val = localStorage.getItem(BRAND_KEY);
+    state.brand = val ? JSON.parse(val) : 'My Clothing Brand';
+  } catch(e){ state.brand = 'My Clothing Brand'; }
+  
+  state.ready = true;
+  render();
+}
+  
+function saveItem(item){
+  try { localStorage.setItem(itemKey(item.id), JSON.stringify(item)); }
+  catch(e){ showToast('Could not save item locally', true); }
+}
+
+function saveIndex(){
+  try { localStorage.setItem(INDEX_KEY, JSON.stringify(state.items.map(i=>i.id))); }
+  catch(e){ showToast('Could not save inventory list', true); }
+}
+
+function deleteItemStorage(id){
+  try { 
+    localStorage.removeItem(itemKey(id)); 
+    state.items = state.items.filter(i => i.id !== id);
+    saveIndex();
+  } catch(e){ showToast('Could not delete item', true); }
+}
+
+function saveLog(){
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(state.log)); }
+  catch(e){ showToast('Could not save sale log', true); }
+}
+
+function saveBrand(){
+  try { localStorage.setItem(BRAND_KEY, JSON.stringify(state.brand)); }
+  catch(e){}
+}
+  
+function showToast(msg, isError){
+  toastMsg = {msg, isError};
+  render();
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ toastMsg = null; render(); }, 2600);
+}
+  
+function totalStock(item){ return item.colors.reduce((s,c)=>s+c.qty,0); }
+function lowStockCount(){
+  return state.items.filter(i => totalStock(i) <= 5).length;
+}
+function esc(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  
+function thumbHtml(item, size){
+  size = size || 56;
+  if(item && item.image){
+    return `<img class="thumb" style="width:${size}px;height:${size}px" src="${item.image}" alt="${esc(item.name)}">`;
+  }
+  const initial = ((item && item.name) || '?').trim().charAt(0).toUpperCase() || '?';
+  return `<div class="thumb-placeholder" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.4)}px">${initial}</div>`;
+}
+  
+function resizeImage(file, maxDim, quality){
+  maxDim = maxDim || 480; quality = quality || 0.72;
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if(w > h){ if(w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; } }
+        else { if(h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; } }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => reject(new Error('image load failed'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('file read failed'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function getSizeOptions(type, selectedSize) {
+  const regularSizes = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free size'];
+  const denimSizes = ['28', '30', '32', '34', '36', '38', '40'];
+  const sizes = type === 'denim' ? denimSizes : regularSizes;
+  return sizes.map(s => `<option value="${s}" ${s===selectedSize?'selected':''}>${s}</option>`).join('');
+}
+  
+window.addEventListener('storage', () => {
+  loadAll();
+});
+
+// ---------- RENDER ----------
+function render(){
+  const app = document.getElementById('app');
+  if(!state.ready){ app.innerHTML = '<div class="loading">Loading inventory…</div>'; return; }
+  
+  let html = `
+    <div class="brandbar">
+      <input class="brand-name" id="brandInput" value="${esc(state.brand)}" />
+    </div>
+    <div class="tagline">Stock &amp; sales tracker — everyone on the team sees the same numbers</div>
+  
+    <nav class="tabs">
+      <button data-tab="inventory" class="${state.tab==='inventory'?'active':''}">Inventory
+        ${lowStockCount()>0 ? `<span class="badge">${lowStockCount()}</span>` : ''}
+      </button>
+      <button data-tab="add" class="${state.tab==='add'?'active':''}">Add New Item</button>
+      <button data-tab="log" class="${state.tab==='log'?'active':''}">Sales Log</button>
+    </nav>
+  `;
+  
+  if(state.tab === 'inventory') html += renderInventory();
+  if(state.tab === 'add') html += renderAddForm();
+  if(state.tab === 'log') html += renderLog();
+  
+  html += `<div class="footer-note">Data is shared with everyone who opens this tool. <button class="link" id="resetBtn">Reset all data</button></div>`;
+  
+  app.innerHTML = html;
+  attachHandlers();
+  
+  if(modal) renderModal();
+  if(toastMsg){
+    const t = document.createElement('div');
+    t.className = 'toast' + (toastMsg.isError ? ' error' : '');
+    t.textContent = toastMsg.msg;
+    document.body.appendChild(t);
+  }
+}
+  
+function renderInventory(){
+  const q = state.search.trim().toLowerCase();
+  const items = state.items.filter(i => i.name.toLowerCase().includes(q));
+  
+  let html = `<div class="toolbar">
+      <input type="search" class="search" id="searchInput" placeholder="Search items…" value="${esc(state.search)}" />
+    </div>`;
+  
+  if(state.items.length === 0){
+    html += `<div class="empty"><h3>No stock yet</h3><p>Add your first item to start tracking what's available.</p></div>`;
+    return html;
+  }
+  if(items.length === 0){
+    html += `<div class="empty"><h3>No matches</h3><p>Try a different search term.</p></div>`;
+    return html;
+  }
+  
+  html += '<div class="grid">';
+  for(const item of items){
+    const total = totalStock(item);
+    html += `<div class="card">
+      <div class="card-head">
+        ${thumbHtml(item, 56)}
+        <div style="flex:1;min-width:0">
+          <div class="item-name">${esc(item.name)}</div>
+          <div class="price-tag" style="margin-top:4px">Rs. ${Number(item.price).toLocaleString()}</div>
+        </div>
+      </div>
+      <div class="total-stock">Total available: <b>${total}</b> piece${total===1?'':'s'}</div>
+      <div class="chips">`;
+    for(const c of item.colors){
+      const cls = c.qty === 0 ? 'out' : (c.qty <= 5 ? 'low' : '');
+      html += `<div class="chip ${cls}"><span class="dot" style="background:${esc(c.hex)}"></span>${esc(c.name)} (${esc(c.size || 'Free size')}) · ${c.qty===0?'sold out':c.qty}</div>`;
+    }
+    html += `</div>
+      <div class="card-actions">
+        <button class="primary" data-action="sell" data-id="${item.id}" ${total===0?'disabled':''}>Sell</button>
+        <button class="ghost" data-action="restock" data-id="${item.id}">Restock</button>
+        <button class="ghost" data-action="edit" data-id="${item.id}">Edit</button>
+        <button class="ghost" data-action="delete" data-id="${item.id}">Delete</button>
+      </div>
+    </div>`;
+  }
+  html += '</div>';
+  return html;
+}
+  
+function renderAddForm(){
+  const editItem = state._editingId ? state.items.find(i=>i.id===state._editingId) : null;
+  const it = editItem || {name:'', price:'', sizeType: 'regular', colors:[{name:'', hex:'#1f6f5c', size: '', qty:''}], image:null};
+  const isEdit = !!editItem;
+  const previewImage = state._removePhoto ? null : (state._pendingImage || it.image);
+  
+  let html = `<div class="form-card">
+    <h3 style="font-family:'Fraunces',Georgia,serif;margin-top:0">${isEdit?'Edit item':'Add a new item'}</h3>
+    <div class="field"><label>Item name</label>
+      <input type="text" id="f-name" placeholder="e.g. Slim Fit Denim Jeans" value="${esc(it.name)}"></div>
+    <div class="field"><label>Price per piece (Rs.)</label>
+      <input type="number" id="f-price" min="0" step="1" placeholder="e.g. 1500" value="${it.price}"></div>
+    
+    <div class="field"><label>Item Type (For Sizing Options)</label>
+      <select id="f-sizeType">
+        <option value="regular" ${it.sizeType==='regular'?'selected':''}>Regular Clothing (S, M, L, XL...)</option>
+        <option value="denim" ${it.sizeType==='denim'?'selected':''}>Denim / Jeans (28, 30, 32...)</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Photo</label>
+      <div class="photo-row">
+        <div id="imgPreviewWrap">
+          ${previewImage
+            ? `<img id="imgPreview" src="${previewImage}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--line)">`
+            : `<div id="imgPreview" style="width:80px;height:80px;border-radius:8px;background:#f2f0eb;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-size:11px;text-align:center;padding:4px">No photo</div>`}
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <input type="file" accept="image/*" id="f-image-file">
+          ${previewImage ? `<div><button type="button" class="ghost" style="padding: 4px 10px; font-size: 12px;" id="removePhoto">Remove photo</button></div>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <div class="field"><label>Colours, Sizes &amp; quantity received</label>
+      <div id="colorRows">`;
+  it.colors.forEach((c)=>{
+    html += `<div class="color-row">
+      <input type="color" class="c-hex" value="${esc(c.hex||'#1f6f5c')}">
+      <input type="text" class="c-name" placeholder="Colour" value="${esc(c.name)}">
+      <select class="c-size">${getSizeOptions(it.sizeType, c.size)}</select>
+      <input type="number" class="c-qty" min="0" placeholder="Qty" value="${c.qty}">
+      <button type="button" class="ghost remove-color">✕</button>
+    </div>`;
+  });
+  html += `</div>
+      <button type="button" class="link" id="addColorRow">+ add another variant</button>
+    </div>
+    <div class="form-actions">
+      <button class="primary" id="saveItemBtn">${isEdit?'Save changes':'Add to inventory'}</button>
+      <button class="ghost" id="cancelFormBtn">Cancel</button>
+    </div>
+  </div>`;
+  return html;
+}
+  
+function renderLog(){
+  if(state.log.length === 0){
+    return `<div class="empty"><h3>No sales yet</h3><p>Confirmed sales will show up here.</p></div>`;
+  }
+  const revenue = state.log.reduce((s,l)=>s + l.qty*l.price, 0);
+  let html = `<div class="toolbar"><div class="total-stock">Total sales revenue: <b>Rs. ${revenue.toLocaleString()}</b> across ${state.log.length} order${state.log.length===1?'':'s'}</div></div>`;
+  html += `<div class="log-wrap"><table><thead><tr>
+      <th>Date</th><th>Item</th><th>Colour & Size</th><th>Qty</th><th>Price ea.</th><th>Total</th><th>Buyer</th>
+    </tr></thead><tbody>`;
+  [...state.log].reverse().forEach(l=>{
+    const d = new Date(l.time);
+    html += `<tr><td>${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td>
+      <td>${esc(l.item)}</td><td>${esc(l.color)}</td><td>${l.qty}</td>
+      <td>Rs. ${Number(l.price).toLocaleString()}</td><td>Rs. ${(l.qty*l.price).toLocaleString()}</td>
+      <td>${esc(l.buyer)||'—'}</td></tr>`;
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+  
+function renderModal(){
+  const item = modal.item;
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  
+  if(modal.type === 'sell'){
+    const inStock = item.colors.filter(c=>c.qty>0);
+    wrap.innerHTML = `<div class="modal">
+      <div class="modal-title-row">${thumbHtml(item,44)}<h3>Sell — ${esc(item.name)}</h3></div>
+      <div class="sub">Pick the exact variation being bought below.</div>
+      <div class="color-pick">
+        ${item.colors.map((c, idx)=>`
+          <label class="${c.qty===0?'disabled':''}">
+            <input type="radio" name="sellVariantIdx" value="${idx}" ${c.qty===0?'disabled':''}>
+            <span class="dot" style="background:${esc(c.hex)}"></span> ${esc(c.name)} — Size: <b>${esc(c.size || 'Free size')}</b>
+            <span class="avail">${c.qty===0?'sold out':c.qty+' left'}</span>
+          </label>`).join('')}
+      </div>
+      <div class="field"><label>Quantity to sell</label><input type="number" id="sellQty" min="1" value="1"></div>
+      <div class="field"><label>Buyer / order note (optional)</label><input type="text" id="sellBuyer" placeholder="e.g. walk-in customer"></div>
+      <div class="form-actions">
+        <button class="primary" id="confirmSell" ${inStock.length===0?'disabled':''}>Confirm sale</button>
+        <button class="ghost" id="closeModal">Cancel</button>
+      </div>
+    </div>`;
+  }
+  if(modal.type === 'restock'){
+    wrap.innerHTML = `<div class="modal">
+      <div class="modal-title-row">${thumbHtml(item,44)}<h3>Restock — ${esc(item.name)}</h3></div>
+      <div class="sub">Add pieces to existing variants.</div>
+      <div id="restockRows">
+        ${item.colors.map((c,idx)=>`
+          <div class="color-row" data-idx="${idx}">
+            <span class="dot" style="background:${esc(c.hex)}"></span>
+            <input type="text" value="${esc(c.name)} (${esc(c.size || 'Free size')})" disabled style="flex:1">
+            <input type="number" class="restock-add" min="0" placeholder="+ add" style="width:80px">
+          </div>`).join('')}
+      </div>
+      <div class="form-actions">
+        <button class="primary" id="confirmRestock">Save restock</button>
+        <button class="ghost" id="closeModal">Cancel</button>
+      </div>
+    </div>`;
+  }
+  document.body.appendChild(wrap);
+  wrap.addEventListener('click', e=>{ if(e.target.id==='overlay') closeModal(); });
+  document.getElementById('closeModal')?.addEventListener('click', closeModal);
+  
+  if(modal.type === 'sell'){
+    document.getElementById('confirmSell').addEventListener('click', ()=>{
+      const variantIdxInput = wrap.querySelector('input[name=sellVariantIdx]:checked');
+      const qty = parseInt(document.getElementById('sellQty').value, 10);
+      const buyer = document.getElementById('sellBuyer').value.trim();
+      if(!variantIdxInput){ showToast('Choose a variation first', true); return; }
+      
+      const variantIdx = parseInt(variantIdxInput.value, 10);
+      const color = item.colors[variantIdx];
+      
+      if(!qty || qty < 1){ showToast('Enter a valid quantity', true); return; }
+      if(qty > color.qty){ showToast(`Only ${color.qty} left — can't sell ${qty}`, true); return; }
+      
+      color.qty -= qty;
+      state.log.push({
+        id: uid(), 
+        time: Date.now(), 
+        item: item.name, 
+        color: `${color.name} (${color.size || 'Free size'})`, 
+        qty, 
+        price: Number(item.price), 
+        buyer
+      });
+      saveItem(item); saveLog();
+      closeModal();
+      showToast(`Sold ${qty} × ${color.name} (${color.size || 'Free size'}).`);
+      render();
+    });
+  }
+  if(modal.type === 'restock'){
+    document.getElementById('confirmRestock').addEventListener('click', ()=>{
+      const rows = wrap.querySelectorAll('#restockRows .color-row');
+      let changed = false;
+      rows.forEach(row=>{
+        const idx = parseInt(row.dataset.idx,10);
+        const add = parseInt(row.querySelector('.restock-add').value, 10);
+        if(add && add > 0){ item.colors[idx].qty += add; changed = true; }
+      });
+      if(!changed){ showToast('Enter at least one quantity to add', true); return; }
+      saveItem(item);
+      closeModal();
+      showToast('Restock saved');
+      render();
+    });
+  }
+}
+  
+function closeModal(){
+  modal = null;
+  document.getElementById('overlay')?.remove();
+}
+  
+// ---------- EVENT HANDLERS ----------
+function attachHandlers(){
+  document.getElementById('brandInput')?.addEventListener('change', e=>{
+    state.brand = e.target.value.trim() || 'My Clothing Brand';
+    saveBrand();
+  });
+  
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      state.tab = b.dataset.tab;
+      if(b.dataset.tab === 'add'){ state._editingId = null; state._pendingImage = null; state._removePhoto = false; }
+      render();
+    });
+  });
+  
+  document.getElementById('searchInput')?.addEventListener('input', e=>{
+    state.search = e.target.value; render();
+  });
+  
+  document.getElementById('resetBtn')?.addEventListener('click', () => {
+    if(confirm('This clears all items and sales history for everyone. Are you sure?')){
+      localStorage.clear();
+      state.items = []; 
+      state.log = []; 
+      state.brand = 'My Clothing Brand';
+      showToast('All system data cleared.');
+      render();
+    }
+  });
+  
+  document.querySelectorAll('[data-action]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.id;
+      const item = state.items.find(i=>i.id===id);
+      const action = btn.dataset.action;
+      if(action === 'sell'){ modal = {type:'sell', item}; render(); }
+      if(action === 'restock'){ modal = {type:'restock', item}; render(); }
+      if(action === 'edit'){
+        state._editingId = id; state._pendingImage = null; state._removePhoto = false;
+        state.tab = 'add'; render();
+      }
+      if(action === 'delete'){
+        if(confirm(`Delete "${item.name}" from inventory? This can't be undone.`)){
+          deleteItemStorage(id);
+          showToast(`Deleted "${item.name}"`);
+          render();
+        }
+      }
+    });
+  });
+  
+  // Add / edit form configuration
+  const colorRowsWrap = document.getElementById('colorRows');
+  if(colorRowsWrap){
+    document.getElementById('f-sizeType')?.addEventListener('change', (e) => {
+      const type = e.target.value;
+      document.querySelectorAll('#colorRows .c-size').forEach(select => {
+        const currentVal = select.value;
+        select.innerHTML = getSizeOptions(type, currentVal);
+      });
+    });
+
+    document.getElementById('addColorRow').addEventListener('click', ()=>{
+      const type = document.getElementById('f-sizeType').value;
+      const row = document.createElement('div');
+      row.className = 'color-row';
+      row.innerHTML = `<input type="color" class="c-hex" value="#1f6f5c">
+        <input type="text" class="c-name" placeholder="Colour">
+        <select class="c-size">${getSizeOptions(type, '')}</select>
+        <input type="number" class="c-qty" min="0" placeholder="Qty">
+        <button type="button" class="ghost remove-color">✕</button>`;
+      colorRowsWrap.appendChild(row);
+      row.querySelector('.remove-color').addEventListener('click', ()=>row.remove());
+    });
+
+    document.querySelectorAll('.remove-color').forEach(b=>{
+      b.addEventListener('click', ()=>{ if(document.querySelectorAll('#colorRows .color-row').length>1) b.closest('.color-row').remove(); });
+    });
+  
+    document.getElementById('f-image-file')?.addEventListener('change', async (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      try {
+        const dataUrl = await resizeImage(file);
+        state._pendingImage = dataUrl;
+        state._removePhoto = false;
+        render();
+      } catch(err){ showToast('Could not load that photo', true); }
+    });
+    document.getElementById('removePhoto')?.addEventListener('click', ()=>{
+      state._pendingImage = null;
+      state._removePhoto = true;
+      render();
+    });
+  
+    document.getElementById('cancelFormBtn').addEventListener('click', ()=>{
+      state._editingId = null; state._pendingImage = null; state._removePhoto = false;
+      state.tab = 'inventory'; render();
+    });
+  
+    document.getElementById('saveItemBtn').addEventListener('click', async ()=>{
+      const name = document.getElementById('f-name').value.trim();
+      const price = parseFloat(document.getElementById('f-price').value);
+      const sizeType = document.getElementById('f-sizeType').value;
+      
+      if(!name){ showToast('Item name is required', true); return; }
+      if(isNaN(price) || price < 0){ showToast('Enter a valid price', true); return; }
+      
+      const colors = [];
+      document.querySelectorAll('#colorRows .color-row').forEach(row=>{
+        const cname = row.querySelector('.c-name').value.trim();
+        const hex = row.querySelector('.c-hex').value;
+        const size = row.querySelector('.c-size').value;
+        const qty = parseInt(row.querySelector('.c-qty').value, 10);
+        if(cname) colors.push({name:cname, hex, size, qty: isNaN(qty)?0:qty});
+      });
+      if(colors.length === 0){ showToast('Add at least one variation', true); return; }
+  
+      let image = null;
+      if(state._pendingImage) image = state._pendingImage;
+      else if(state._editingId && !state._removePhoto){
+        const existing = state.items.find(i=>i.id===state._editingId);
+        image = existing ? existing.image : null;
+      }
+  
+      if(state._editingId){
+        const item = state.items.find(i=>i.id===state._editingId);
+        item.name = name; item.price = price; item.sizeType = sizeType; item.colors = colors; item.image = image;
+        saveItem(item);
+        showToast('Item updated');
+      } else {
+        const item = {id:uid(), name, price, sizeType, colors, image};
+        state.items.push(item);
+        saveItem(item);
+        saveIndex();
+        showToast('Item added to inventory');
+      }
+      state._editingId = null; state._pendingImage = null; state._removePhoto = false;
+      state.tab = 'inventory';
+      render();
+    });
+  }
+}
+  
+loadAll();
+</script>
+</body>
+</html>
