@@ -275,20 +275,64 @@
     .modal h3 { font-family: 'Fraunces', Georgia, serif; margin: 0; font-size: 20px; }
     .modal-title-row { display: flex; gap: 10px; align-items: center; margin-bottom: 4px; }
     .modal .sub { color: var(--ink-soft); font-size: 13px; margin-bottom: 16px; }
-    .color-pick { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-    .color-pick label {
+
+    /* Beautiful, Horizontal Modal Selectors */
+    .modal-swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; margin-top: 4px; }
+    .modal-swatch-btn {
       display: flex;
       align-items: center;
       gap: 8px;
+      padding: 8px 14px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 500;
+      font-family: inherit;
+      color: var(--ink);
+    }
+    .modal-swatch-btn.active {
+      border-color: var(--accent);
+      background: #f0f7f5;
+      outline: 2px solid var(--accent);
+    }
+    
+    .modal-sizes { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; margin-top: 4px; }
+    .modal-size-btn {
+      padding: 8px 12px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 9px 11px;
-      font-size: 14px;
+      background: #fff;
       cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      text-align: center;
+      min-width: 60px;
+      color: var(--ink);
     }
-    .color-pick label.disabled { opacity: .4; cursor: not-allowed; }
-    .color-pick input { margin: 0; }
-    .avail { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--ink-soft); }
+    .modal-size-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .modal-size-btn.disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      pointer-events: none;
+      background: #faf9f6;
+    }
+    .modal-size-btn .qty-label {
+      display: block;
+      font-size: 10px;
+      font-weight: normal;
+      margin-top: 2px;
+      opacity: 0.7;
+    }
+    .modal-size-btn.active .qty-label {
+      opacity: 0.9;
+    }
   
     table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
     th {
@@ -350,7 +394,6 @@ function uid(){ return Date.now().toString(36) + Math.random().toString(36).slic
 const REGULAR_SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free size'];
 const DENIM_SIZES = ['28', '30', '32', '34', '36', '38', '40'];
 
-// Robust Data Sanitization Handler to prevent UI Crashes on 404/Null fields
 function esc(s){ 
   if (s === null || s === undefined) return '';
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); 
@@ -379,7 +422,6 @@ async function cloudPut(path, data) {
 }
   
 async function syncFromCloud(isBackground = false){
-  // Stop background sync if actively typing or adding variations
   if(isBackground && (modal !== null || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
     return; 
   }
@@ -701,34 +743,141 @@ function renderModal(){
   wrap.id = 'overlay';
   
   if(modal.type === 'sell'){
-    const inStock = item.colors ? item.colors.filter(c=>c.qty>0) : [];
-    wrap.innerHTML = `<div class="modal">
-      <div class="modal-title-row">${thumbHtml(item,44)}<h3>Sell — ${esc(item.name)}</h3></div>
-      <div class="sub">Pick the exact variation being bought below.</div>
-      <div class="color-pick">
-        ${item.colors ? item.colors.map((c, idx)=>`
-          <label class="${c.qty===0?'disabled':''}">
-            <input type="radio" name="sellVariantIdx" value="${idx}" ${c.qty===0?'disabled':''}>
-            <span class="dot" style="background:${esc(c.hex)}"></span> ${esc(c.name)} — Size: <b>${esc(c.size || 'Free size')}</b>
-            <span class="avail">${c.qty===0?'sold out':c.qty+' left'}</span>
-          </label>`).join('') : ''}
-      </div>
-      <div class="field"><label>Quantity to sell</label><input type="number" id="sellQty" min="1" value="1"></div>
-      <div class="field"><label>Buyer / order note (optional)</label><input type="text" id="sellBuyer" placeholder="e.g. walk-in customer"></div>
-      <div class="form-actions">
-        <button class="primary" id="confirmSell" ${inStock.length===0?'disabled':''}>Confirm sale</button>
-        <button class="ghost" id="closeModal">Cancel</button>
-      </div>
-    </div>`;
+    const colorGroups = groupColors(item.colors).filter(g => {
+      return Object.values(g.sizes).some(qty => qty > 0);
+    });
+
+    if(colorGroups.length === 0) {
+      wrap.innerHTML = `<div class="modal">
+        <div class="modal-title-row">${thumbHtml(item,44)}<h3>Sell — ${esc(item.name)}</h3></div>
+        <p class="empty" style="padding: 20px 0;">This item is fully out of stock.</p>
+        <div class="form-actions"><button class="ghost" id="closeModal">Close</button></div>
+      </div>`;
+      document.body.appendChild(wrap);
+      document.getElementById('closeModal')?.addEventListener('click', closeModal);
+      return;
+    }
+
+    // Default selection variables to the first available in-stock color and size
+    let selColor = colorGroups[0].name;
+    let selSize = Object.keys(colorGroups[0].sizes).find(sz => colorGroups[0].sizes[sz] > 0);
+
+    // Dynamic markup container
+    wrap.innerHTML = `<div class="modal" id="modalDynamicContainer"></div>`;
+    document.body.appendChild(wrap);
+
+    const container = document.getElementById('modalDynamicContainer');
+
+    const updateSellModalDOM = () => {
+      const activeGroup = colorGroups.find(g => g.name === selColor) || colorGroups[0];
+      
+      container.innerHTML = `
+        <div class="modal-title-row">
+          ${thumbHtml(item,44)}
+          <h3>Sell — ${esc(item.name)}</h3>
+        </div>
+        <div class="sub">Pick the color and size being bought.</div>
+        
+        <div class="field">
+          <label>1. Select Color</label>
+          <div class="modal-swatches">
+            ${colorGroups.map(g => `
+              <button type="button" class="modal-swatch-btn ${g.name === selColor ? 'active' : ''}" data-color="${esc(g.name)}">
+                <span class="swatch-dot" style="background:${esc(g.hex)}"></span>
+                ${esc(g.name)}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="field">
+          <label>2. Select Size</label>
+          <div class="modal-sizes">
+            ${Object.entries(activeGroup.sizes).map(([sz, qty]) => {
+              const outOfStock = qty <= 0;
+              return `
+                <button type="button" class="modal-size-btn ${sz === selSize ? 'active' : ''} ${outOfStock ? 'disabled' : ''}" data-size="${esc(sz)}" ${outOfStock ? 'disabled' : ''}>
+                  ${esc(sz)}
+                  <span class="qty-label">${outOfStock ? 'out' : qty + ' left'}</span>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <div class="field"><label>Quantity to sell</label><input type="number" id="sellQty" min="1" value="1"></div>
+        <div class="field"><label>Buyer / order note (optional)</label><input type="text" id="sellBuyer" placeholder="e.g. walk-in customer"></div>
+        <div class="form-actions">
+          <button class="primary" id="confirmSell">Confirm sale</button>
+          <button class="ghost" id="closeModal">Cancel</button>
+        </div>
+      `;
+
+      // Attach event listeners back to dynamic elements
+      container.querySelectorAll('.modal-swatch-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selColor = btn.getAttribute('data-color');
+          const newGroup = colorGroups.find(g => g.name === selColor);
+          // Set default size for new color choice to the first in-stock size
+          selSize = Object.keys(newGroup.sizes).find(sz => newGroup.sizes[sz] > 0);
+          updateSellModalDOM();
+        });
+      });
+
+      container.querySelectorAll('.modal-size-btn:not(.disabled)').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selSize = btn.getAttribute('data-size');
+          updateSellModalDOM();
+        });
+      });
+
+      document.getElementById('closeModal')?.addEventListener('click', closeModal);
+      
+      document.getElementById('confirmSell')?.addEventListener('click', async () => {
+        const qty = parseInt(document.getElementById('sellQty').value, 10);
+        const buyer = document.getElementById('sellBuyer').value.trim();
+        
+        const colorObj = item.colors.find(c => c.name === selColor && (c.size || 'Free size') === selSize);
+        
+        if(!colorObj) {
+          showToast('Invalid color or size picked.', true);
+          return;
+        }
+        if(!qty || qty < 1){ showToast('Enter a valid quantity', true); return; }
+        if(qty > colorObj.qty){ showToast(`Only ${colorObj.qty} left — can't sell ${qty}`, true); return; }
+        
+        colorObj.qty -= qty;
+        const logId = uid();
+        const saleLogEntry = {
+          id: logId, 
+          time: Date.now(), 
+          item: item.name, 
+          color: `${colorObj.name} (${colorObj.size || 'Free size'})`, 
+          qty, 
+          price: Number(item.price), 
+          buyer
+        };
+        
+        await cloudPut(`items/${item.id}`, item);
+        await cloudPut(`log/${logId}`, saleLogEntry);
+        
+        closeModal();
+        showToast(`Sold ${qty} × ${colorObj.name} (${colorObj.size || 'Free size'}).`);
+        syncFromCloud();
+      });
+    };
+
+    updateSellModalDOM();
   }
+
   if(modal.type === 'restock'){
     wrap.innerHTML = `<div class="modal">
       <div class="modal-title-row">${thumbHtml(item,44)}<h3>Restock — ${esc(item.name)}</h3></div>
       <div class="sub">Add pieces to existing variants.</div>
       <div id="restockRows">
         ${item.colors ? item.colors.map((c,idx)=>`
-          <div class="color-row" data-idx="${idx}">
-            <span class="dot" style="background:${esc(c.hex)}"></span>
+          <div class="color-row" data-idx="${idx}" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <span class="dot" style="background:${esc(c.hex)};width:12px;height:12px;border-radius:50%;display:inline-block;"></span>
             <input type="text" value="${esc(c.name)} (${esc(c.size || 'Free size')})" disabled style="flex:1">
             <input type="number" class="restock-add" min="0" placeholder="+ add" style="width:80px">
           </div>`).join('') : ''}
@@ -738,45 +887,9 @@ function renderModal(){
         <button class="ghost" id="closeModal">Cancel</button>
       </div>
     </div>`;
-  }
-  document.body.appendChild(wrap);
-  wrap.addEventListener('click', e=>{ if(e.target.id==='overlay') closeModal(); });
-  document.getElementById('closeModal')?.addEventListener('click', closeModal);
-  
-  if(modal.type === 'sell'){
-    document.getElementById('confirmSell').addEventListener('click', async ()=>{
-      const variantIdxInput = wrap.querySelector('input[name=sellVariantIdx]:checked');
-      const qty = parseInt(document.getElementById('sellQty').value, 10);
-      const buyer = document.getElementById('sellBuyer').value.trim();
-      if(!variantIdxInput){ showToast('Choose a variation first', true); return; }
-      
-      const variantIdx = parseInt(variantIdxInput.value, 10);
-      const color = item.colors[variantIdx];
-      
-      if(!qty || qty < 1){ showToast('Enter a valid quantity', true); return; }
-      if(qty > color.qty){ showToast(`Only ${color.qty} left — can't sell ${qty}`, true); return; }
-      
-      color.qty -= qty;
-      const logId = uid();
-      const saleLogEntry = {
-        id: logId, 
-        time: Date.now(), 
-        item: item.name, 
-        color: `${color.name} (${color.size || 'Free size'})`, 
-        qty, 
-        price: Number(item.price), 
-        buyer
-      };
-      
-      await cloudPut(`items/${item.id}`, item);
-      await cloudPut(`log/${logId}`, saleLogEntry);
-      
-      closeModal();
-      showToast(`Sold ${qty} × ${color.name} (${color.size || 'Free size'}).`);
-      syncFromCloud();
-    });
-  }
-  if(modal.type === 'restock'){
+    document.body.appendChild(wrap);
+    document.getElementById('closeModal')?.addEventListener('click', closeModal);
+    
     document.getElementById('confirmRestock').addEventListener('click', async ()=>{
       const rows = wrap.querySelectorAll('#restockRows .color-row');
       let changed = false;
@@ -793,6 +906,8 @@ function renderModal(){
       syncFromCloud();
     });
   }
+
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeModal(); });
 }
   
 function closeModal(){
@@ -816,7 +931,6 @@ function attachHandlers(){
     });
   });
   
-  // Handlers for dynamic collapsibles inside inventory cards
   document.querySelectorAll('.breakdown-toggle-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const targetId = btn.getAttribute('data-target');
@@ -898,11 +1012,9 @@ function attachHandlers(){
     });
   });
   
-  // DROP-DOWN FORM LOGIC FOR SIZES
   const colorGroupsWrap = document.getElementById('colorGroupsWrap');
   if(colorGroupsWrap){
     
-    // Switch between Regular/Denim and refresh the dynamic options dropdown
     document.getElementById('f-sizeType')?.addEventListener('change', (e) => {
       const type = e.target.value;
       document.querySelectorAll('.color-group').forEach((groupEl) => {
@@ -917,33 +1029,27 @@ function attachHandlers(){
       const dropdown = groupEl.querySelector('.size-dropdown-selector');
       const containerList = groupEl.querySelector('.added-sizes-list');
 
-      // On Selecting a size variant from the dropdown
       dropdown.addEventListener('change', (e) => {
         const selectedSize = e.target.value;
         if(!selectedSize) return;
 
-        // Insert new size input row
         const rowHtml = renderAddedSizeRow(selectedSize, 0);
         containerList.insertAdjacentHTML('beforeend', rowHtml);
 
-        // Update dropdown options to remove already selected size
         const sizeType = document.getElementById('f-sizeType').value;
         const currentActiveRows = containerList.querySelectorAll('.added-size-row');
         const activeSizes = Array.from(currentActiveRows).map(r => r.dataset.size);
         dropdown.innerHTML = renderDropdownOptions(sizeType, activeSizes);
 
-        // Instantly focus quantity input field for ease
         const targetRow = containerList.querySelector(`[data-size="${selectedSize}"]`);
         targetRow.querySelector('.c-size-qty').focus();
       });
 
-      // Handle element removal
       containerList.addEventListener('click', (e) => {
         if(e.target.classList.contains('remove-size-row')) {
           const targetRow = e.target.closest('.added-size-row');
           targetRow.remove();
 
-          // Refresh dropdown lists with freed up size values
           const sizeType = document.getElementById('f-sizeType').value;
           const currentActiveRows = containerList.querySelectorAll('.added-size-row');
           const activeSizes = Array.from(currentActiveRows).map(r => r.dataset.size);
@@ -952,7 +1058,6 @@ function attachHandlers(){
       });
     }
 
-    // Bind existing size options on edit load
     document.querySelectorAll('.color-group').forEach(groupEl => {
       attachSizeGroupInteraction(groupEl);
       
@@ -965,7 +1070,6 @@ function attachHandlers(){
       });
     });
 
-    // Handle addition of new color groups
     document.getElementById('addColorGroup')?.addEventListener('click', ()=>{
       const type = document.getElementById('f-sizeType').value;
       const newIdx = document.querySelectorAll('.color-group').length;
@@ -1091,7 +1195,6 @@ function attachHandlers(){
   }
 }
 
-// Fixed background data pull interval checking logic
 setInterval(() => syncFromCloud(true), 8000);
 syncFromCloud();
 </script>
