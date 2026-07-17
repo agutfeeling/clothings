@@ -1,402 +1,302 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventory Management</title>
-  <style>
-    :root {
-      --bg: #f4f2ee;
-      --card: #ffffff;
-      --ink: #1e2420;
-      --ink-soft: #5b6660;
-      --line: #e3ddd2;
-      --accent: #1f6f5c;
-      --accent-dark: #164e42;
-      --gold: #c08a2e;
-      --danger: #b5473f;
-      --danger-soft: #f6e4e2;
-      --amber-soft: #faf0da;
-      --radius: 12px;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      padding: 0;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
-    }
-    #app { max-width: 1080px; margin: 0 auto; padding: 20px 16px 60px; }
-  
-    .brandbar { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
-    .brand-name {
-      font-family: 'Fraunces', Georgia, serif;
-      font-weight: 600;
-      font-size: 28px;
-      border: none;
-      background: none;
-      color: var(--ink);
-      padding: 2px 4px;
-      border-radius: 6px;
-      max-width: 60%;
-    }
-    .brand-name:focus { outline: 2px solid var(--accent); background: #fff; }
-    .tagline { color: var(--ink-soft); font-size: 13px; letter-spacing: .03em; }
-  
-    nav.tabs { display: flex; gap: 6px; margin: 18px 0 20px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-    nav.tabs button {
-      border: none;
-      background: none;
-      padding: 10px 14px;
-      font-size: 14.5px;
-      font-weight: 600;
-      color: var(--ink-soft);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      font-family: inherit;
-    }
-    nav.tabs button.active { color: var(--accent-dark); border-bottom-color: var(--accent); }
-    nav.tabs button .badge {
-      background: var(--danger);
-      color: #fff;
-      border-radius: 20px;
-      font-size: 11px;
-      padding: 1px 6px;
-      margin-left: 6px;
-      font-weight: 700;
-    }
-  
-    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
-    input[type=text], input[type=number], input[type=search], select {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 9px 11px;
-      font-size: 14px;
-      font-family: inherit;
-      background: #fff;
-      color: var(--ink);
-    }
-    input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-    .search { flex: 1; min-width: 180px; }
-  
-    button.primary {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 16px;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    button.primary:hover { background: var(--accent-dark); }
-    button.ghost {
-      background: none;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 9px 14px;
-      font-size: 13.5px;
-      cursor: pointer;
-      color: var(--ink);
-      font-family: inherit;
-    }
-    button.ghost:hover { border-color: var(--accent); color: var(--accent-dark); }
-    button.link {
-      background: none;
-      border: none;
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 13px;
-      font-family: inherit;
-      padding: 0;
-    }
-    button.link:hover { text-decoration: underline; color: var(--accent-dark); }
-    button:disabled { opacity: .45; cursor: not-allowed; }
-  
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.04);
-    }
-    .card-head { display: flex; align-items: center; gap: 14px; }
-    .item-name { font-family: 'Fraunces', Georgia, serif; font-size: 18px; font-weight: 600; line-height: 1.25; }
-    .price-tag {
-      font-family: 'IBM Plex Mono', monospace;
-      background: var(--amber-soft);
-      color: var(--gold);
-      border: 1px solid #ecd9ad;
-      padding: 3px 8px;
-      border-radius: 20px;
-      font-size: 12.5px;
-      font-weight: 600;
-      white-space: nowrap;
-      display: inline-block;
-    }
-    .total-stock { font-size: 13px; color: var(--ink-soft); }
-    .total-stock b { color: var(--ink); }
-  
-    .thumb { border-radius: 8px; object-fit: cover; border: 1px solid var(--line); flex-shrink: 0; background: #f2f0eb; }
-    .thumb-placeholder {
-      border-radius: 8px;
-      background: var(--amber-soft);
-      color: var(--gold);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Fraunces', Georgia, serif;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-  
-    /* Simplified Color Swatches Row */
-    .card-swatches { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
-    .swatch-dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); display: inline-block; }
-    .swatch-wrapper { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-soft); background: #faf9f6; padding: 2px 8px; border-radius: 20px; border: 1px solid var(--line); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Inventory Management</title>
+<style>
+  :root {
+    --bg: #f4f2ee;
+    --card: #ffffff;
+    --ink: #1e2420;
+    --ink-soft: #5b6660;
+    --line: #e3ddd2;
+    --accent: #1f6f5c;
+    --accent-dark: #164e42;
+    --accent-soft: #e7f2ee;
+    --gold: #c08a2e;
+    --danger: #b5473f;
+    --danger-soft: #f6e4e2;
+    --amber-soft: #faf0da;
+    --amber: #b8862f;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  #app { max-width: 1080px; margin: 0 auto; padding: 16px 14px 48px; }
+  .screen { animation: fadeIn .25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) { .screen, .card, .toast { animation: none !important; transition: none !important; } }
 
-    /* Collapsible stock breakdown panel */
-    .breakdown-toggle-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; border-top: 1px solid var(--line); margin-top: 4px; padding-top: 8px; background: none; border-left: none; border-right: none; border-bottom: none; cursor: pointer; color: var(--accent); font-weight: 600; font-size: 13px; font-family: inherit; text-align: left; }
-    .breakdown-toggle-btn::after { content: '▾'; font-size: 10px; margin-left: 4px; }
-    .breakdown-toggle-btn.expanded::after { content: '▴'; }
-    .breakdown-panel { display: none; background: #faf9f6; border-radius: 8px; padding: 8px 12px; font-size: 13px; border: 1px solid var(--line); }
-    .breakdown-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed var(--line); }
-    .breakdown-row:last-child { border-bottom: none; }
-    .breakdown-row .dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); margin-right: 6px; display: inline-block; }
+  h1,h2,h3 { font-family: 'Fraunces', Georgia, serif; margin: 0; }
 
-    .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; padding-top: 8px; }
-    .card-actions button { flex: 1; min-width: 60px; padding: 8px 10px; font-size: 13px; }
-  
-    .empty { text-align: center; padding: 60px 20px; color: var(--ink-soft); }
-    .empty h3 { font-family: 'Fraunces', Georgia, serif; color: var(--ink); font-size: 20px; margin-bottom: 6px; }
-  
-    /* Form Layout Elements */
-    .form-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; max-width: 600px; }
-    .field { margin-bottom: 14px; }
-    .field label {
-      display: block;
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--ink-soft);
-      margin-bottom: 5px;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-    }
-    .field input[type=text], .field input[type=number], .field select { width: 100%; }
-    
-    /* Dropdown Variant Form Rows */
-    .color-group {
-      background: #faf9f6;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 14px;
-      margin-bottom: 14px;
-    }
-    .color-group-header {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    .color-group-header input[type=color] {
-      width: 38px;
-      height: 38px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 2px;
-      background: #fff;
-    }
-    .color-group-header input[type=text] { flex: 1; }
-    
-    .size-adder-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-      align-items: center;
-      background: #f0ede6;
-      padding: 6px 10px;
-      border-radius: 6px;
-    }
-    .size-adder-row select { width: auto; padding: 5px 8px; font-size: 13px; }
-    
-    .added-sizes-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-top: 8px;
-    }
-    .added-size-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: #fff;
-      border: 1px solid var(--line);
-      padding: 6px 10px;
-      border-radius: 6px;
-    }
-    .added-size-name { font-weight: 600; font-size: 13px; width: 60px; }
-    .added-size-row input[type=number] { padding: 4px 8px; max-width: 90px; font-size: 13px; }
+  /* ---------- ROLE SELECT ---------- */
+  .role-wrap { min-height: 88vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 10px; }
+  .role-brand { font-family: 'Fraunces', Georgia, serif; font-size: 34px; font-weight: 600; margin-bottom: 4px; }
+  .role-tag { color: var(--ink-soft); font-size: 14px; margin-bottom: 40px; }
+  .role-cards { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 560px; }
+  .role-card {
+    flex: 1; min-width: 220px;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 28px 20px; cursor: pointer; text-align: left;
+    display: flex; flex-direction: column; gap: 8px;
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  }
+  .role-card:hover, .role-card:active { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,.06); border-color: var(--accent); }
+  .role-card .icon { font-size: 30px; margin-bottom: 4px; }
+  .role-card h2 { font-size: 19px; }
+  .role-card p { margin: 0; font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
 
-    .form-actions { display: flex; gap: 10px; margin-top: 16px; }
-    .photo-row { display: flex; gap: 12px; align-items: center; }
-  
-    /* Modal styles */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(20,20,15,.45);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      z-index: 50;
-    }
-    .modal {
-      background: #fff;
-      border-radius: 14px;
-      padding: 22px;
-      max-width: 440px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-    .modal h3 { font-family: 'Fraunces', Georgia, serif; margin: 0; font-size: 20px; }
-    .modal-title-row { display: flex; gap: 10px; align-items: center; margin-bottom: 4px; }
-    .modal .sub { color: var(--ink-soft); font-size: 13px; margin-bottom: 16px; }
+  /* ---------- ADMIN LOGIN ---------- */
+  .login-wrap { min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .login-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px 24px; max-width: 340px; width: 100%; text-align: center; }
+  .login-card .icon { font-size: 30px; margin-bottom: 8px; }
+  .login-card h2 { font-size: 20px; margin-bottom: 6px; }
+  .login-card p { color: var(--ink-soft); font-size: 13px; margin: 0 0 18px; }
+  .login-card input { width: 100%; text-align: center; letter-spacing: .1em; margin-bottom: 12px; }
+  .back-link { display: inline-block; margin-top: 14px; color: var(--ink-soft); font-size: 13px; }
 
-    /* Beautiful, Horizontal Modal Selectors */
-    .modal-swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; margin-top: 4px; }
-    .modal-swatch-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      background: #fff;
-      cursor: pointer;
-      font-size: 13.5px;
-      font-weight: 500;
-      font-family: inherit;
-      color: var(--ink);
-    }
-    .modal-swatch-btn.active {
-      border-color: var(--accent);
-      background: #f0f7f5;
-      outline: 2px solid var(--accent);
-    }
-    
-    .modal-sizes { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; margin-top: 4px; }
-    .modal-size-btn {
-      padding: 8px 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      font-family: inherit;
-      text-align: center;
-      min-width: 60px;
-      color: var(--ink);
-    }
-    .modal-size-btn.active {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-    }
-    .modal-size-btn.disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-      pointer-events: none;
-      background: #faf9f6;
-    }
-    .modal-size-btn .qty-label {
-      display: block;
-      font-size: 10px;
-      font-weight: normal;
-      margin-top: 2px;
-      opacity: 0.7;
-    }
-    .modal-size-btn.active .qty-label {
-      opacity: 0.9;
-    }
-  
-    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-    th {
-      text-align: left;
-      color: var(--ink-soft);
-      font-size: 11.5px;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-      padding: 8px 10px;
-      border-bottom: 1px solid var(--line);
-    }
-    td { padding: 9px 10px; border-bottom: 1px solid var(--line); }
-    tr:last-child td { border-bottom: none; }
-    .log-wrap { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow-x: auto; }
-  
-    .toast {
-      position: fixed;
-      bottom: 22px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--accent-dark);
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 500;
-      z-index: 100;
-      box-shadow: 0 6px 20px rgba(0,0,0,.2);
-    }
-    .toast.error { background: var(--danger); }
-    .loading { text-align: center; padding: 60px; color: var(--ink-soft); }
-    .footer-note { text-align: center; color: var(--ink-soft); font-size: 12px; margin-top: 36px; }
-  </style>
+  /* ---------- TOP BAR ---------- */
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+  .brand-name {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 24px;
+    border: none; background: none; color: var(--ink); padding: 2px 4px; border-radius: 6px; max-width: 65%;
+  }
+  .brand-name:focus { outline: 2px solid var(--accent); background: #fff; }
+  .brand-static { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 24px; }
+  .role-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    border: 1px solid var(--line); background: #fff; border-radius: 20px;
+    padding: 7px 13px; font-size: 12.5px; font-weight: 600; color: var(--ink-soft);
+    cursor: pointer; white-space: nowrap;
+  }
+  .role-pill:hover { border-color: var(--accent); color: var(--accent-dark); }
+  .tagline { color: var(--ink-soft); font-size: 12.5px; letter-spacing: .02em; margin-bottom: 14px; }
+
+  /* ---------- TABS / CHIPS ---------- */
+  nav.tabs {
+    display: flex; gap: 4px; margin: 14px 0 18px; border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; background: var(--bg); z-index: 5;
+    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  nav.tabs::-webkit-scrollbar { display: none; }
+  nav.tabs button {
+    border: none; background: none; padding: 12px 14px; font-size: 14.5px; font-weight: 600;
+    color: var(--ink-soft); cursor: pointer; border-bottom: 2px solid transparent; font-family: inherit;
+    white-space: nowrap; min-height: 44px;
+  }
+  nav.tabs button.active { color: var(--accent-dark); border-bottom-color: var(--accent); }
+  nav.tabs button .badge { background: var(--danger); color: #fff; border-radius: 20px; font-size: 11px; padding: 1px 6px; margin-left: 6px; font-weight: 700; }
+
+  .chip-row { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; margin-bottom: 14px; scrollbar-width: none; }
+  .chip-row::-webkit-scrollbar { display: none; }
+  .chip {
+    flex-shrink: 0; border: 1px solid var(--line); background: #fff; border-radius: 20px;
+    padding: 9px 16px; font-size: 13.5px; font-weight: 600; color: var(--ink-soft); cursor: pointer; font-family: inherit;
+    min-height: 40px;
+  }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* ---------- FORM CONTROLS ---------- */
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  input[type=text], input[type=number], input[type=search], input[type=password], select, textarea {
+    border: 1px solid var(--line); border-radius: 9px; padding: 11px 12px; font-size: 16px;
+    font-family: inherit; background: #fff; color: var(--ink); min-height: 44px;
+  }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .search { flex: 1; min-width: 160px; }
+
+  button { touch-action: manipulation; }
+  button.primary {
+    background: var(--accent); color: #fff; border: none; border-radius: 9px; padding: 12px 18px;
+    font-weight: 600; font-size: 14.5px; cursor: pointer; font-family: inherit; min-height: 44px;
+  }
+  button.primary:hover { background: var(--accent-dark); }
+  button.primary:active { transform: scale(.98); }
+  button.ghost {
+    background: none; border: 1px solid var(--line); border-radius: 9px; padding: 10px 15px;
+    font-size: 13.5px; cursor: pointer; color: var(--ink); font-family: inherit; min-height: 44px;
+  }
+  button.ghost:hover { border-color: var(--accent); color: var(--accent-dark); }
+  button.link {
+    background: none; border: none; color: var(--accent); text-decoration: none; font-weight: 600;
+    cursor: pointer; font-size: 13px; font-family: inherit; padding: 6px 0;
+  }
+  button.link:hover { text-decoration: underline; color: var(--accent-dark); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+
+  /* ---------- GRID / CARDS ---------- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  @media (max-width: 480px) { .grid { grid-template-columns: 1fr 1fr; gap: 10px; } }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 14px; display: flex; flex-direction: column; gap: 10px;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.04); }
+  .card-head { display: flex; align-items: center; gap: 12px; }
+  .item-name { font-family: 'Fraunces', Georgia, serif; font-size: 16.5px; font-weight: 600; line-height: 1.25; }
+  .price-tag {
+    font-family: 'IBM Plex Mono', monospace; background: var(--amber-soft); color: var(--gold);
+    border: 1px solid #ecd9ad; padding: 3px 8px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    white-space: nowrap; display: inline-block; margin-top: 3px;
+  }
+  .total-stock { font-size: 12.5px; color: var(--ink-soft); }
+  .total-stock b { color: var(--ink); }
+
+  .status-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; display: inline-block; width: fit-content; letter-spacing: .02em; }
+  .status-in { background: var(--accent-soft); color: var(--accent-dark); }
+  .status-low { background: var(--amber-soft); color: var(--amber); }
+  .status-out { background: var(--danger-soft); color: var(--danger); }
+  .cat-badge { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); }
+
+  .thumb { border-radius: 10px; object-fit: cover; border: 1px solid var(--line); flex-shrink: 0; background: #f2f0eb; cursor: pointer; }
+  .thumb-placeholder {
+    border-radius: 10px; background: var(--amber-soft); color: var(--gold); display: flex; align-items: center;
+    justify-content: center; font-family: 'Fraunces', Georgia, serif; font-weight: 700; flex-shrink: 0; cursor: pointer;
+  }
+  .thumb-full { width: 100%; border-radius: 10px; object-fit: cover; max-height: 260px; background: #f2f0eb; }
+  .thumb-full-placeholder { width: 100%; height: 200px; border-radius: 10px; background: var(--amber-soft); color: var(--gold); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',Georgia,serif; font-weight:700; font-size:56px; }
+
+  .card-swatches { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
+  .swatch-dot { width: 13px; height: 13px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); display: inline-block; }
+  .swatch-wrapper { display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--ink-soft); background: #faf9f6; padding: 2px 7px; border-radius: 20px; border: 1px solid var(--line); }
+
+  .breakdown-toggle-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; border-top: 1px solid var(--line); margin-top: 2px; padding-top: 8px; background: none; border-left: none; border-right: none; border-bottom: none; cursor: pointer; color: var(--accent); font-weight: 600; font-size: 12.5px; font-family: inherit; text-align: left; min-height: auto; }
+  .breakdown-toggle-btn::after { content: '▾'; font-size: 10px; margin-left: 4px; }
+  .breakdown-toggle-btn.expanded::after { content: '▴'; }
+  .breakdown-panel { display: none; background: #faf9f6; border-radius: 8px; padding: 8px 12px; font-size: 12.5px; border: 1px solid var(--line); }
+  .breakdown-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed var(--line); gap: 8px; }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-row .dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); margin-right: 6px; display: inline-block; }
+
+  .card-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; padding-top: 6px; }
+  .card-actions button { flex: 1; min-width: 56px; padding: 9px 8px; font-size: 12.5px; }
+
+  .empty { text-align: center; padding: 50px 16px; color: var(--ink-soft); grid-column: 1/-1; }
+  .empty h3 { font-family: 'Fraunces', Georgia, serif; color: var(--ink); font-size: 19px; margin-bottom: 6px; }
+
+  /* ---------- ADMIN FORM ---------- */
+  .form-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; max-width: 600px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
+  .field input[type=text], .field input[type=number], .field select { width: 100%; }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+
+  .color-group { background: #faf9f6; border: 1px solid var(--line); border-radius: 9px; padding: 14px; margin-bottom: 12px; }
+  .color-group-header { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  .color-group-header input[type=color] { width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 8px; padding: 2px; background: #fff; }
+  .color-group-header input[type=text] { flex: 1; min-width: 120px; }
+
+  .size-adder-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; background: #f0ede6; padding: 8px 10px; border-radius: 7px; flex-wrap: wrap; }
+  .size-adder-row select { width: auto; padding: 8px; font-size: 13px; flex: 1; min-width: 140px; }
+
+  .added-sizes-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .added-size-row { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); padding: 8px 10px; border-radius: 7px; flex-wrap: wrap; }
+  .added-size-name { font-weight: 600; font-size: 13px; width: 55px; }
+  .added-size-row input[type=number] { padding: 7px 8px; max-width: 90px; font-size: 14px; }
+
+  .form-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .form-actions button { flex: 1; min-width: 140px; }
+  .photo-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+  /* ---------- MODAL ---------- */
+  .overlay { position: fixed; inset: 0; background: rgba(20,20,15,.5); display: flex; align-items: flex-end; justify-content: center; padding: 0; z-index: 50; animation: fadeIn .15s ease; }
+  @media (min-width: 620px) { .overlay { align-items: center; padding: 16px; } }
+  .modal { background: #fff; border-radius: 18px 18px 0 0; padding: 22px; max-width: 460px; width: 100%; max-height: 92vh; overflow-y: auto; }
+  @media (min-width: 620px) { .modal { border-radius: 16px; } }
+  .modal h3 { font-family: 'Fraunces', Georgia, serif; margin: 0; font-size: 19px; }
+  .modal-title-row { display: flex; gap: 10px; align-items: center; margin-bottom: 4px; }
+  .modal .sub { color: var(--ink-soft); font-size: 13px; margin-bottom: 16px; }
+
+  .modal-swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; margin-top: 4px; }
+  .modal-swatch-btn { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid var(--line); border-radius: 20px; background: #fff; cursor: pointer; font-size: 13.5px; font-weight: 500; font-family: inherit; color: var(--ink); min-height: 40px; }
+  .modal-swatch-btn.active { border-color: var(--accent); background: #f0f7f5; outline: 2px solid var(--accent); }
+
+  .modal-sizes { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; margin-top: 4px; }
+  .modal-size-btn { padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; text-align: center; min-width: 58px; min-height: 44px; color: var(--ink); }
+  .modal-size-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .modal-size-btn.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; background: #faf9f6; }
+  .modal-size-btn .qty-label { display: block; font-size: 10px; font-weight: normal; margin-top: 2px; opacity: 0.7; }
+  .modal-size-btn.active .qty-label { opacity: 0.9; }
+
+  /* customer detail view */
+  .detail-color-block { border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .detail-color-head { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+  .detail-size-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .detail-size-chip { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 12.5px; font-weight: 600; background: #faf9f6; }
+  .detail-size-chip.avail { background: var(--accent-soft); color: var(--accent-dark); border-color: var(--accent-soft); }
+  .detail-size-chip.out { background: var(--danger-soft); color: var(--danger); border-color: var(--danger-soft); text-decoration: line-through; opacity: .8; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: var(--ink-soft); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding: 9px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 9px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  .log-wrap { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow-x: auto; }
+
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--accent-dark); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; z-index: 100; box-shadow: 0 6px 20px rgba(0,0,0,.2); max-width: 90vw; text-align: center; animation: toastIn .2s ease; }
+  @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+  .toast.error { background: var(--danger); }
+  .loading { text-align: center; padding: 60px; color: var(--ink-soft); }
+  .footer-note { text-align: center; color: var(--ink-soft); font-size: 12px; margin-top: 30px; }
+  .security-note { text-align: center; color: var(--ink-soft); font-size: 11.5px; margin-top: 10px; opacity: .8; }
+</style>
 </head>
 <body>
-
 <div id="app"><div class="loading">Loading cloud inventory sync…</div></div>
-  
+
 <script>
 const FIREBASE_DB_URL = "https://clothing-inventory-dc4f3-default-rtdb.asia-southeast1.firebasedatabase.app/";
 
-let state = { 
-  items: [], 
-  log: [], 
-  brand: 'My Clothing Brand', 
-  tab: 'inventory', 
-  search: '', 
+// Change this to whatever you like — this is a simple front-desk gate, not a real
+// security system (anyone who views the page source can see it). It just stops
+// casual browsing from turning into casual editing.
+const ADMIN_PASSWORD = "admin123";
+
+let state = {
+  items: [],
+  log: [],
+  brand: 'My Clothing Brand',
   ready: false,
-  _editingId: null, 
-  _pendingImage: null, 
-  _removePhoto: false 
+
+  role: null,          // null | 'admin_login' | 'customer' | 'admin'
+  tab: 'inventory',     // admin tabs: inventory / add / log
+
+  search: '',
+  custCategory: 'all',
+  custSize: '',
+
+  _editingId: null,
+  _pendingImage: null,
+  _removePhoto: false,
+  _saving: false,
+  _loginError: ''
 };
 
 let modal = null;
 let toastMsg = null, toastTimer = null;
-  
+
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
 const REGULAR_SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free size'];
 const DENIM_SIZES = ['28', '30', '32', '34', '36', '38', '40'];
+const CATEGORIES = [
+  { key: 'men', label: 'Men' },
+  { key: 'women', label: 'Women' },
+  { key: 'unisex', label: 'Unisex' }
+];
 
-function esc(s){ 
+function esc(s){
   if (s === null || s === undefined) return '';
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); 
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 async function cloudFetch(path) {
@@ -420,58 +320,68 @@ async function cloudPut(path, data) {
     showToast('Network error syncing to database', true);
   }
 }
-  
+
 async function syncFromCloud(isBackground = false){
-  if(isBackground && (modal !== null || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
-    return; 
+  if (isBackground) {
+    // Never let a background refresh overwrite what someone is actively doing —
+    // this is what used to wipe out the "add item" form mid-typing.
+    const focused = document.activeElement;
+    const isTyping = focused && ['INPUT','SELECT','TEXTAREA'].includes(focused.tagName);
+    const isEditingForm = state.role === 'admin' && state.tab === 'add';
+    if (modal !== null || isTyping || isEditingForm) return;
   }
 
   const rawItems = await cloudFetch('items');
   const items = [];
-  if (rawItems) {
-    Object.keys(rawItems).forEach(id => {
-      if (rawItems[id]) items.push(rawItems[id]);
-    });
-  }
+  if (rawItems) Object.keys(rawItems).forEach(id => { if (rawItems[id]) items.push(rawItems[id]); });
   state.items = items;
-  
+
   const rawLog = await cloudFetch('log');
   const log = [];
-  if (rawLog) {
-    Object.keys(rawLog).forEach(id => {
-      if (rawLog[id]) log.push(rawLog[id]);
-    });
-  }
+  if (rawLog) Object.keys(rawLog).forEach(id => { if (rawLog[id]) log.push(rawLog[id]); });
   state.log = log.sort((a,b) => a.time - b.time);
-  
+
   const rawBrand = await cloudFetch('brand');
   state.brand = typeof rawBrand === 'string' ? rawBrand : 'My Clothing Brand';
-  
+
   state.ready = true;
   render();
 }
-  
+
 function showToast(msg, isError){
   toastMsg = {msg, isError};
   render();
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=>{ toastMsg = null; render(); }, 2600);
 }
-  
+
 function totalStock(item){ return item.colors ? item.colors.reduce((s,c)=>s+c.qty,0) : 0; }
-function lowStockCount(){
-  return state.items.filter(i => totalStock(i) <= 5).length;
+function lowStockCount(){ return state.items.filter(i => totalStock(i) <= 5).length; }
+
+function stockBadgeHtml(item){
+  const total = totalStock(item);
+  if (total === 0) return `<span class="status-badge status-out">Out of stock</span>`;
+  if (total <= 5) return `<span class="status-badge status-low">Low stock</span>`;
+  return `<span class="status-badge status-in">In stock</span>`;
 }
-  
-function thumbHtml(item, size){
+
+function catLabel(key){
+  const c = CATEGORIES.find(c => c.key === key);
+  return c ? c.label : 'Unisex';
+}
+
+function thumbHtml(item, size, big){
   size = size || 56;
-  if(item && item.image){
-    return `<img class="thumb" style="width:${size}px;height:${size}px" src="${item.image}" alt="${esc(item.name)}">`;
+  const clickable = `data-thumb-id="${item.id}"`;
+  if (item && item.image) {
+    if (big) return `<img class="thumb-full" ${clickable} src="${item.image}" alt="${esc(item.name)}">`;
+    return `<img class="thumb" style="width:${size}px;height:${size}px" ${clickable} src="${item.image}" alt="${esc(item.name)}">`;
   }
   const initial = ((item && item.name) || '?').trim().charAt(0).toUpperCase() || '?';
-  return `<div class="thumb-placeholder" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.4)}px">${initial}</div>`;
+  if (big) return `<div class="thumb-full-placeholder" ${clickable}>${initial}</div>`;
+  return `<div class="thumb-placeholder" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.4)}px" ${clickable}>${initial}</div>`;
 }
-  
+
 function resizeImage(file, maxDim, quality){
   maxDim = maxDim || 480; quality = quality || 0.72;
   return new Promise((resolve, reject)=>{
@@ -480,8 +390,8 @@ function resizeImage(file, maxDim, quality){
       const img = new Image();
       img.onload = () => {
         let w = img.width, h = img.height;
-        if(w > h){ if(w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; } }
-        else { if(h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; } }
+        if (w > h) { if (w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; } }
+        else { if (h > maxDim) { w = Math.round(w * maxDim / h); h = maxDim; } }
         const canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
@@ -500,12 +410,15 @@ function groupColors(colors) {
   if (!colors) return [];
   colors.forEach(c => {
     const key = `${c.name}_${c.hex}`;
-    if (!groups[key]) {
-      groups[key] = { name: c.name, hex: c.hex, sizes: {} };
-    }
+    if (!groups[key]) groups[key] = { name: c.name, hex: c.hex, sizes: {} };
     groups[key].sizes[c.size || 'Free size'] = c.qty;
   });
   return Object.values(groups);
+}
+
+function itemHasSize(item, size){
+  if (!size || !item.colors) return true;
+  return item.colors.some(c => (c.size || 'Free size') === size && c.qty > 0);
 }
 
 function renderAddedSizeRow(size, qty) {
@@ -521,25 +434,155 @@ function renderAddedSizeRow(size, qty) {
 function renderDropdownOptions(sizeType, existingSizes) {
   const allSizes = sizeType === 'denim' ? DENIM_SIZES : REGULAR_SIZES;
   const filtered = allSizes.filter(s => !existingSizes.includes(s));
-  
   let html = `<option value="" disabled selected>+ Add Size Variant</option>`;
-  filtered.forEach(s => {
-    html += `<option value="${s}">${s}</option>`;
-  });
+  filtered.forEach(s => { html += `<option value="${s}">${s}</option>`; });
   return html;
 }
 
-// ---------- RENDER ----------
+// ============================================================
+// RENDER — top level router
+// ============================================================
 function render(){
   const app = document.getElementById('app');
-  if(!state.ready){ app.innerHTML = '<div class="loading">Loading cloud inventory sync…</div>'; return; }
-  
-  let html = `
-    <div class="brandbar">
-      <input class="brand-name" id="brandInput" value="${esc(state.brand)}" />
+  if (!state.ready) { app.innerHTML = '<div class="loading">Loading cloud inventory sync…</div>'; return; }
+
+  let html;
+  if (state.role === null) html = renderRoleSelect();
+  else if (state.role === 'admin_login') html = renderAdminLogin();
+  else if (state.role === 'customer') html = renderCustomerApp();
+  else html = renderAdminApp();
+
+  app.innerHTML = html;
+  attachHandlers();
+
+  if (modal) renderModal();
+  if (toastMsg) {
+    const t = document.createElement('div');
+    t.className = 'toast' + (toastMsg.isError ? ' error' : '');
+    t.textContent = toastMsg.msg;
+    document.body.appendChild(t);
+  }
+}
+
+// ---------- ROLE SELECT ----------
+function renderRoleSelect(){
+  return `
+    <div class="screen role-wrap">
+      <div class="role-brand">${esc(state.brand)}</div>
+      <div class="role-tag">Who's using the app right now?</div>
+      <div class="role-cards">
+        <div class="role-card" id="pickCustomer">
+          <div class="icon">👀</div>
+          <h2>Check Stock</h2>
+          <p>Browse items, search by name or size, and see what colours and sizes are available. No changes can be made here.</p>
+        </div>
+        <div class="role-card" id="pickAdmin">
+          <div class="icon">🔒</div>
+          <h2>Admin</h2>
+          <p>Add and edit items, record sales, restock, and manage the catalogue. Requires the admin password.</p>
+        </div>
+      </div>
     </div>
-    <div class="tagline">Cloud connected stock tracker — changes sync immediately for all devices</div>
-  
+  `;
+}
+
+// ---------- ADMIN LOGIN ----------
+function renderAdminLogin(){
+  return `
+    <div class="screen login-wrap">
+      <div class="login-card">
+        <div class="icon">🔒</div>
+        <h2>Admin login</h2>
+        <p>Enter the admin password to add items, restock, and record sales.</p>
+        <input type="password" id="adminPassword" placeholder="Password" autofocus>
+        ${state._loginError ? `<p style="color:var(--danger); font-size:12.5px; margin:-6px 0 10px;">${esc(state._loginError)}</p>` : ''}
+        <button class="primary" id="adminLoginBtn" style="width:100%">Log in</button>
+        <div><button class="link back-link" id="backToRoleSelect">← Back</button></div>
+      </div>
+    </div>
+  `;
+}
+
+// ---------- CUSTOMER APP ----------
+function renderCustomerApp(){
+  let html = `<div class="screen">
+    <div class="topbar">
+      <div class="brand-static">${esc(state.brand)}</div>
+      <button class="role-pill" id="switchToAdmin">🔒 Admin</button>
+    </div>
+    <div class="tagline">Tap any item to see which colours and sizes are in stock.</div>
+
+    <div class="chip-row">
+      <button class="chip ${state.custCategory==='all'?'active':''}" data-cat="all">All</button>
+      ${CATEGORIES.map(c => `<button class="chip ${state.custCategory===c.key?'active':''}" data-cat="${c.key}">${c.label}</button>`).join('')}
+    </div>
+
+    <div class="toolbar">
+      <input type="search" class="search" id="custSearch" placeholder="Search by name…" value="${esc(state.search)}">
+      <select id="custSizeFilter">
+        <option value="">All sizes</option>
+        <optgroup label="Regular">
+          ${REGULAR_SIZES.map(s => `<option value="${s}" ${state.custSize===s?'selected':''}>${s}</option>`).join('')}
+        </optgroup>
+        <optgroup label="Denim">
+          ${DENIM_SIZES.map(s => `<option value="${s}" ${state.custSize===s?'selected':''}>${s}</option>`).join('')}
+        </optgroup>
+      </select>
+    </div>
+  `;
+
+  const q = state.search.trim().toLowerCase();
+  const filtered = state.items.filter(i => {
+    if (!i.name || !i.name.toLowerCase().includes(q)) return false;
+    if (state.custCategory !== 'all' && (i.category || 'unisex') !== state.custCategory) return false;
+    if (state.custSize && !itemHasSize(i, state.custSize)) return false;
+    return true;
+  });
+
+  if (state.items.length === 0) {
+    html += `<div class="empty"><h3>No stock yet</h3><p>Items added by an admin will show up here.</p></div>`;
+  } else if (filtered.length === 0) {
+    html += `<div class="empty"><h3>No matches</h3><p>Try a different search, category, or size.</p></div>`;
+  } else {
+    html += '<div class="grid">';
+    for (const item of filtered) {
+      const colorGroups = groupColors(item.colors);
+      html += `<div class="card">
+        <div class="card-head">
+          ${thumbHtml(item, 60)}
+          <div style="flex:1;min-width:0">
+            <div class="cat-badge">${catLabel(item.category)}</div>
+            <div class="item-name">${esc(item.name)}</div>
+            <div class="price-tag">Rs. ${Number(item.price).toLocaleString()}</div>
+          </div>
+        </div>
+        ${stockBadgeHtml(item)}
+        <div class="card-swatches">
+          ${colorGroups.map(g => `
+            <div class="swatch-wrapper">
+              <span class="swatch-dot" style="background:${esc(g.hex)}"></span>
+              <span>${esc(g.name)}</span>
+            </div>
+          `).join('')}
+        </div>
+        <button class="ghost" data-thumb-id="${item.id}" style="width:100%">View colours &amp; sizes</button>
+      </div>`;
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+// ---------- ADMIN APP ----------
+function renderAdminApp(){
+  let html = `<div class="screen">
+    <div class="topbar">
+      <input class="brand-name" id="brandInput" value="${esc(state.brand)}">
+      <button class="role-pill" id="exitAdmin">👀 Staff view</button>
+    </div>
+    <div class="tagline">Cloud connected — changes sync to every device immediately.</div>
+
     <nav class="tabs">
       <button data-tab="inventory" class="${state.tab==='inventory'?'active':''}">Inventory
         ${lowStockCount()>0 ? `<span class="badge">${lowStockCount()}</span>` : ''}
@@ -548,57 +591,48 @@ function render(){
       <button data-tab="log" class="${state.tab==='log'?'active':''}">Sales Log</button>
     </nav>
   `;
-  
-  if(state.tab === 'inventory') html += renderInventory();
-  if(state.tab === 'add') html += renderAddForm();
-  if(state.tab === 'log') html += renderLog();
-  
+
+  if (state.tab === 'inventory') html += renderInventory();
+  if (state.tab === 'add') html += renderAddForm();
+  if (state.tab === 'log') html += renderLog();
+
   html += `<div class="footer-note">Realtime backend connection configured. <button class="link" id="resetBtn">Reset cloud database</button></div>`;
-  
-  app.innerHTML = html;
-  attachHandlers();
-  
-  if(modal) renderModal();
-  if(toastMsg){
-    const t = document.createElement('div');
-    t.className = 'toast' + (toastMsg.isError ? ' error' : '');
-    t.textContent = toastMsg.msg;
-    document.body.appendChild(t);
-  }
+  html += `<div class="security-note">Admin access is a shared password for your team — treat it like a shop key, not a personal login.</div>`;
+  html += '</div>';
+  return html;
 }
-  
+
 function renderInventory(){
   const q = state.search.trim().toLowerCase();
   const items = state.items.filter(i => i.name && i.name.toLowerCase().includes(q));
-  
+
   let html = `<div class="toolbar">
-      <input type="search" class="search" id="searchInput" placeholder="Search items…" value="${esc(state.search)}" />
+      <input type="search" class="search" id="searchInput" placeholder="Search items…" value="${esc(state.search)}">
       <button class="ghost" id="refreshBtn">🔄 Force Sync</button>
     </div>`;
-  
-  if(state.items.length === 0){
+
+  if (state.items.length === 0) {
     html += `<div class="empty"><h3>No stock yet</h3><p>Add your first item to start tracking what's available.</p></div>`;
     return html;
   }
-  
+
   html += '<div class="grid" id="inventoryGrid">';
-  if(items.length === 0){
+  if (items.length === 0) {
     html += `<div class="empty" id="noMatchesMsg"><h3>No matches</h3><p>Try a different search term.</p></div>`;
   } else {
-    for(const item of items){
+    for (const item of items) {
       const total = totalStock(item);
       const colorGroups = groupColors(item.colors);
-      
       html += `<div class="card" data-item-name="${esc(item.name.toLowerCase())}">
         <div class="card-head">
           ${thumbHtml(item, 56)}
           <div style="flex:1;min-width:0">
+            <div class="cat-badge">${catLabel(item.category)}</div>
             <div class="item-name">${esc(item.name)}</div>
-            <div class="price-tag" style="margin-top:4px">Rs. ${Number(item.price).toLocaleString()}</div>
+            <div class="price-tag">Rs. ${Number(item.price).toLocaleString()}</div>
           </div>
         </div>
         <div class="total-stock">Total available: <b>${total}</b> piece${total===1?'':'s'}</div>
-        
         <div class="card-swatches">
           ${colorGroups.map(g => `
             <div class="swatch-wrapper" title="${esc(g.name)}">
@@ -607,10 +641,7 @@ function renderInventory(){
             </div>
           `).join('')}
         </div>
-
-        <button type="button" class="breakdown-toggle-btn" data-target="breakdown-${item.id}">
-          Stock Breakdown
-        </button>
+        <button type="button" class="breakdown-toggle-btn" data-target="breakdown-${item.id}">Stock Breakdown</button>
         <div class="breakdown-panel" id="breakdown-${item.id}">
           ${colorGroups.map(g => `
             <div class="breakdown-row">
@@ -623,7 +654,6 @@ function renderInventory(){
             </div>
           `).join('')}
         </div>
-
         <div class="card-actions">
           <button class="primary" data-action="sell" data-id="${item.id}" ${total===0?'disabled':''}>Sell</button>
           <button class="ghost" data-action="restock" data-id="${item.id}">Restock</button>
@@ -636,26 +666,35 @@ function renderInventory(){
   html += '</div>';
   return html;
 }
-  
+
 function renderAddForm(){
   const editItem = state._editingId ? state.items.find(i=>i.id===state._editingId) : null;
   const isEdit = !!editItem;
-  
+
   const defaultGroup = [{name:'', hex:'#1f6f5c', sizes: {}}];
   const colorGroups = editItem ? groupColors(editItem.colors) : defaultGroup;
   const sizeType = editItem ? editItem.sizeType : 'regular';
+  const category = editItem ? (editItem.category || 'unisex') : 'unisex';
   const name = editItem ? editItem.name : '';
   const price = editItem ? editItem.price : '';
-  
+
   const previewImage = state._removePhoto ? null : (state._pendingImage || (editItem && editItem.image));
-  
+
   let html = `<div class="form-card">
-    <h3 style="font-family:'Fraunces',Georgia,serif;margin-top:0">${isEdit?'Edit item':'Add a new item'}</h3>
+    <h3 style="margin-bottom:16px">${isEdit?'Edit item':'Add a new item'}</h3>
     <div class="field"><label>Item name</label>
       <input type="text" id="f-name" placeholder="e.g. Slim Fit Denim Jeans" value="${esc(name)}"></div>
-    <div class="field"><label>Price per piece (Rs.)</label>
-      <input type="number" id="f-price" min="0" step="1" placeholder="e.g. 1500" value="${price}"></div>
-    
+
+    <div class="field-row">
+      <div class="field"><label>Price per piece (Rs.)</label>
+        <input type="number" id="f-price" min="0" step="1" placeholder="e.g. 1500" value="${price}"></div>
+      <div class="field"><label>Category</label>
+        <select id="f-category">
+          ${CATEGORIES.map(c => `<option value="${c.key}" ${category===c.key?'selected':''}>${c.label}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+
     <div class="field"><label>Item Type (For Sizing Options)</label>
       <select id="f-sizeType">
         <option value="regular" ${sizeType==='regular'?'selected':''}>Regular Clothing (S, M, L, XL...)</option>
@@ -673,38 +712,33 @@ function renderAddForm(){
         </div>
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <input type="file" accept="image/*" id="f-image-file">
-          ${previewImage ? `<div><button type="button" class="ghost" style="padding: 4px 10px; font-size: 12px;" id="removePhoto">Remove photo</button></div>` : ''}
+          ${previewImage ? `<div><button type="button" class="ghost" style="padding: 6px 12px; font-size: 12px; min-height:auto;" id="removePhoto">Remove photo</button></div>` : ''}
         </div>
       </div>
     </div>
 
     <div class="field"><label>Colors &amp; Stock Levels</label>
       <div id="colorGroupsWrap">`;
-  
+
   colorGroups.forEach((group, gIdx)=>{
     const existingSizesArray = Object.keys(group.sizes);
-    
     html += `
     <div class="color-group" data-idx="${gIdx}">
       <div class="color-group-header">
         <input type="color" class="g-hex" value="${esc(group.hex)}">
         <input type="text" class="g-name" placeholder="Color Name (e.g. Royal Blue)" value="${esc(group.name)}">
-        <button type="button" class="ghost remove-color-group">✕ Remove Color</button>
+        <button type="button" class="ghost remove-color-group">✕ Remove</button>
       </div>
-      
       <div class="size-adder-row">
-        <span style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">Add Size Variant:</span>
-        <select class="size-dropdown-selector">
-          ${renderDropdownOptions(sizeType, existingSizesArray)}
-        </select>
+        <span style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">Add size:</span>
+        <select class="size-dropdown-selector">${renderDropdownOptions(sizeType, existingSizesArray)}</select>
       </div>
-
       <div class="added-sizes-list">
         ${existingSizesArray.map(sz => renderAddedSizeRow(sz, group.sizes[sz])).join('')}
       </div>
     </div>`;
   });
-  
+
   html += `</div>
       <button type="button" class="link" id="addColorGroup">+ Add Another Color</button>
     </div>
@@ -715,9 +749,9 @@ function renderAddForm(){
   </div>`;
   return html;
 }
-  
+
 function renderLog(){
-  if(state.log.length === 0){
+  if (state.log.length === 0) {
     return `<div class="empty"><h3>No sales yet</h3><p>Confirmed sales will show up here.</p></div>`;
   }
   const revenue = state.log.reduce((s,l)=>s + l.qty*l.price, 0);
@@ -735,19 +769,52 @@ function renderLog(){
   html += '</tbody></table></div>';
   return html;
 }
-  
+
+// ============================================================
+// MODALS
+// ============================================================
 function renderModal(){
   const item = modal.item;
   const wrap = document.createElement('div');
   wrap.className = 'overlay';
   wrap.id = 'overlay';
-  
-  if(modal.type === 'sell'){
-    const colorGroups = groupColors(item.colors).filter(g => {
-      return Object.values(g.sizes).some(qty => qty > 0);
-    });
 
-    if(colorGroups.length === 0) {
+  if (modal.type === 'detail') {
+    const colorGroups = groupColors(item.colors);
+    wrap.innerHTML = `<div class="modal">
+      <div class="modal-title-row">
+        <h3>${esc(item.name)}</h3>
+      </div>
+      ${thumbHtml(item, null, true)}
+      <div style="display:flex; align-items:center; gap:10px; margin:12px 0 4px;">
+        <span class="cat-badge">${catLabel(item.category)}</span>
+        ${stockBadgeHtml(item)}
+      </div>
+      <div class="price-tag" style="margin-bottom:14px">Rs. ${Number(item.price).toLocaleString()}</div>
+      ${colorGroups.map(g => `
+        <div class="detail-color-block">
+          <div class="detail-color-head">
+            <span class="swatch-dot" style="background:${esc(g.hex)}"></span>${esc(g.name)}
+          </div>
+          <div class="detail-size-chips">
+            ${Object.entries(g.sizes).map(([sz, qty]) => `
+              <span class="detail-size-chip ${qty>0?'avail':'out'}">${esc(sz)}${qty>0?` · ${qty} left`:' · out'}</span>
+            `).join('')}
+          </div>
+        </div>
+      `).join('') || '<p class="sub">No colour or size information yet.</p>'}
+      <div class="form-actions"><button class="ghost" id="closeModal" style="width:100%">Close</button></div>
+    </div>`;
+    document.body.appendChild(wrap);
+    document.getElementById('closeModal')?.addEventListener('click', closeModal);
+    wrap.addEventListener('click', e => { if (e.target.id === 'overlay') closeModal(); });
+    return;
+  }
+
+  if (modal.type === 'sell') {
+    const colorGroups = groupColors(item.colors).filter(g => Object.values(g.sizes).some(qty => qty > 0));
+
+    if (colorGroups.length === 0) {
       wrap.innerHTML = `<div class="modal">
         <div class="modal-title-row">${thumbHtml(item,44)}<h3>Sell — ${esc(item.name)}</h3></div>
         <p class="empty" style="padding: 20px 0;">This item is fully out of stock.</p>
@@ -755,56 +822,43 @@ function renderModal(){
       </div>`;
       document.body.appendChild(wrap);
       document.getElementById('closeModal')?.addEventListener('click', closeModal);
+      wrap.addEventListener('click', e => { if (e.target.id === 'overlay') closeModal(); });
       return;
     }
 
-    // Default selection variables to the first available in-stock color and size
     let selColor = colorGroups[0].name;
     let selSize = Object.keys(colorGroups[0].sizes).find(sz => colorGroups[0].sizes[sz] > 0);
 
-    // Dynamic markup container
     wrap.innerHTML = `<div class="modal" id="modalDynamicContainer"></div>`;
     document.body.appendChild(wrap);
-
     const container = document.getElementById('modalDynamicContainer');
 
     const updateSellModalDOM = () => {
       const activeGroup = colorGroups.find(g => g.name === selColor) || colorGroups[0];
-      
       container.innerHTML = `
-        <div class="modal-title-row">
-          ${thumbHtml(item,44)}
-          <h3>Sell — ${esc(item.name)}</h3>
-        </div>
+        <div class="modal-title-row">${thumbHtml(item,44)}<h3>Sell — ${esc(item.name)}</h3></div>
         <div class="sub">Pick the color and size being bought.</div>
-        
         <div class="field">
           <label>1. Select Color</label>
           <div class="modal-swatches">
             ${colorGroups.map(g => `
               <button type="button" class="modal-swatch-btn ${g.name === selColor ? 'active' : ''}" data-color="${esc(g.name)}">
-                <span class="swatch-dot" style="background:${esc(g.hex)}"></span>
-                ${esc(g.name)}
+                <span class="swatch-dot" style="background:${esc(g.hex)}"></span>${esc(g.name)}
               </button>
             `).join('')}
           </div>
         </div>
-
         <div class="field">
           <label>2. Select Size</label>
           <div class="modal-sizes">
             ${Object.entries(activeGroup.sizes).map(([sz, qty]) => {
               const outOfStock = qty <= 0;
-              return `
-                <button type="button" class="modal-size-btn ${sz === selSize ? 'active' : ''} ${outOfStock ? 'disabled' : ''}" data-size="${esc(sz)}" ${outOfStock ? 'disabled' : ''}>
-                  ${esc(sz)}
-                  <span class="qty-label">${outOfStock ? 'out' : qty + ' left'}</span>
-                </button>
-              `;
+              return `<button type="button" class="modal-size-btn ${sz === selSize ? 'active' : ''} ${outOfStock ? 'disabled' : ''}" data-size="${esc(sz)}" ${outOfStock ? 'disabled' : ''}>
+                  ${esc(sz)}<span class="qty-label">${outOfStock ? 'out' : qty + ' left'}</span>
+                </button>`;
             }).join('')}
           </div>
         </div>
-
         <div class="field"><label>Quantity to sell</label><input type="number" id="sellQty" min="1" value="1"></div>
         <div class="field"><label>Buyer / order note (optional)</label><input type="text" id="sellBuyer" placeholder="e.g. walk-in customer"></div>
         <div class="form-actions">
@@ -812,65 +866,40 @@ function renderModal(){
           <button class="ghost" id="closeModal">Cancel</button>
         </div>
       `;
-
-      // Attach event listeners back to dynamic elements
       container.querySelectorAll('.modal-swatch-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           selColor = btn.getAttribute('data-color');
           const newGroup = colorGroups.find(g => g.name === selColor);
-          // Set default size for new color choice to the first in-stock size
           selSize = Object.keys(newGroup.sizes).find(sz => newGroup.sizes[sz] > 0);
           updateSellModalDOM();
         });
       });
-
       container.querySelectorAll('.modal-size-btn:not(.disabled)').forEach(btn => {
-        btn.addEventListener('click', () => {
-          selSize = btn.getAttribute('data-size');
-          updateSellModalDOM();
-        });
+        btn.addEventListener('click', () => { selSize = btn.getAttribute('data-size'); updateSellModalDOM(); });
       });
-
       document.getElementById('closeModal')?.addEventListener('click', closeModal);
-      
       document.getElementById('confirmSell')?.addEventListener('click', async () => {
         const qty = parseInt(document.getElementById('sellQty').value, 10);
         const buyer = document.getElementById('sellBuyer').value.trim();
-        
         const colorObj = item.colors.find(c => c.name === selColor && (c.size || 'Free size') === selSize);
-        
-        if(!colorObj) {
-          showToast('Invalid color or size picked.', true);
-          return;
-        }
-        if(!qty || qty < 1){ showToast('Enter a valid quantity', true); return; }
-        if(qty > colorObj.qty){ showToast(`Only ${colorObj.qty} left — can't sell ${qty}`, true); return; }
-        
+        if (!colorObj) { showToast('Invalid color or size picked.', true); return; }
+        if (!qty || qty < 1) { showToast('Enter a valid quantity', true); return; }
+        if (qty > colorObj.qty) { showToast(`Only ${colorObj.qty} left — can't sell ${qty}`, true); return; }
         colorObj.qty -= qty;
         const logId = uid();
-        const saleLogEntry = {
-          id: logId, 
-          time: Date.now(), 
-          item: item.name, 
-          color: `${colorObj.name} (${colorObj.size || 'Free size'})`, 
-          qty, 
-          price: Number(item.price), 
-          buyer
-        };
-        
+        const saleLogEntry = { id: logId, time: Date.now(), item: item.name, color: `${colorObj.name} (${colorObj.size || 'Free size'})`, qty, price: Number(item.price), buyer };
         await cloudPut(`items/${item.id}`, item);
         await cloudPut(`log/${logId}`, saleLogEntry);
-        
         closeModal();
         showToast(`Sold ${qty} × ${colorObj.name} (${colorObj.size || 'Free size'}).`);
         syncFromCloud();
       });
     };
-
     updateSellModalDOM();
+    wrap.addEventListener('click', e => { if (e.target.id === 'overlay') closeModal(); });
   }
 
-  if(modal.type === 'restock'){
+  if (modal.type === 'restock') {
     wrap.innerHTML = `<div class="modal">
       <div class="modal-title-row">${thumbHtml(item,44)}<h3>Restock — ${esc(item.name)}</h3></div>
       <div class="sub">Add pieces to existing variants.</div>
@@ -889,52 +918,90 @@ function renderModal(){
     </div>`;
     document.body.appendChild(wrap);
     document.getElementById('closeModal')?.addEventListener('click', closeModal);
-    
+    wrap.addEventListener('click', e => { if (e.target.id === 'overlay') closeModal(); });
     document.getElementById('confirmRestock').addEventListener('click', async ()=>{
       const rows = wrap.querySelectorAll('#restockRows .color-row');
       let changed = false;
       rows.forEach(row=>{
         const idx = parseInt(row.dataset.idx,10);
         const add = parseInt(row.querySelector('.restock-add').value, 10);
-        if(add && add > 0){ item.colors[idx].qty += add; changed = true; }
+        if (add && add > 0) { item.colors[idx].qty += add; changed = true; }
       });
-      if(!changed){ showToast('Enter at least one quantity to add', true); return; }
-      
+      if (!changed) { showToast('Enter at least one quantity to add', true); return; }
       await cloudPut(`items/${item.id}`, item);
       closeModal();
       showToast('Restock saved');
       syncFromCloud();
     });
   }
-
-  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeModal(); });
 }
-  
+
 function closeModal(){
   modal = null;
   document.getElementById('overlay')?.remove();
 }
-  
-// ---------- EVENT HANDLERS ----------
+
+// ============================================================
+// EVENT HANDLERS
+// ============================================================
 function attachHandlers(){
+  // ---- role select ----
+  document.getElementById('pickCustomer')?.addEventListener('click', ()=>{ state.role = 'customer'; render(); });
+  document.getElementById('pickAdmin')?.addEventListener('click', ()=>{ state._loginError=''; state.role = 'admin_login'; render(); });
+  document.getElementById('backToRoleSelect')?.addEventListener('click', ()=>{ state._loginError=''; state.role = null; render(); });
+
+  const doLogin = () => {
+    const val = document.getElementById('adminPassword')?.value || '';
+    if (val === ADMIN_PASSWORD) {
+      state._loginError = '';
+      state.role = 'admin';
+      state.tab = 'inventory';
+      render();
+    } else {
+      state._loginError = 'Incorrect password. Try again.';
+      render();
+    }
+  };
+  document.getElementById('adminLoginBtn')?.addEventListener('click', doLogin);
+  document.getElementById('adminPassword')?.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+  document.getElementById('switchToAdmin')?.addEventListener('click', ()=>{ state._loginError=''; state.role = 'admin_login'; render(); });
+  document.getElementById('exitAdmin')?.addEventListener('click', ()=>{ state.role = null; state.tab = 'inventory'; state._editingId = null; render(); });
+
+  // ---- customer filters ----
+  document.querySelectorAll('.chip[data-cat]').forEach(btn => {
+    btn.addEventListener('click', ()=>{ state.custCategory = btn.dataset.cat; render(); });
+  });
+  document.getElementById('custSearch')?.addEventListener('input', e => { state.search = e.target.value; render(); });
+  document.getElementById('custSizeFilter')?.addEventListener('change', e => { state.custSize = e.target.value; render(); });
+
+  // ---- customer / shared: open item detail on thumbnail or view button ----
+  document.querySelectorAll('[data-thumb-id]').forEach(el => {
+    el.addEventListener('click', () => {
+      const item = state.items.find(i => i.id === el.getAttribute('data-thumb-id'));
+      if (item) { modal = { type: 'detail', item }; render(); }
+    });
+  });
+
+  // ---- admin: brand ----
   document.getElementById('brandInput')?.addEventListener('change', async e=>{
     const newBrand = e.target.value.trim() || 'My Clothing Brand';
     await cloudPut('brand', newBrand);
     state.brand = newBrand;
   });
-  
+
+  // ---- admin: tabs ----
   document.querySelectorAll('nav.tabs button').forEach(b=>{
     b.addEventListener('click', ()=>{
       state.tab = b.dataset.tab;
-      if(b.dataset.tab === 'add'){ state._editingId = null; state._pendingImage = null; state._removePhoto = false; }
+      if (b.dataset.tab === 'add') { state._editingId = null; state._pendingImage = null; state._removePhoto = false; }
       render();
     });
   });
-  
+
   document.querySelectorAll('.breakdown-toggle-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const targetId = btn.getAttribute('data-target');
-      const panel = document.getElementById(targetId);
+      const panel = document.getElementById(btn.getAttribute('data-target'));
       if (panel) {
         const isCollapsed = panel.style.display === 'none' || panel.style.display === '';
         panel.style.display = isCollapsed ? 'block' : 'none';
@@ -945,64 +1012,46 @@ function attachHandlers(){
 
   document.getElementById('searchInput')?.addEventListener('input', e=>{
     const query = e.target.value.trim().toLowerCase();
-    state.search = e.target.value; 
-    
+    state.search = e.target.value;
     const cards = document.querySelectorAll('#inventoryGrid .card');
     let visibleCount = 0;
-    
     cards.forEach(card => {
       const name = card.getAttribute('data-item-name') || '';
-      if (name.includes(query)) {
-        card.style.display = 'flex';
-        visibleCount++;
-      } else {
-        card.style.display = 'none';
-      }
+      if (name.includes(query)) { card.style.display = 'flex'; visibleCount++; }
+      else { card.style.display = 'none'; }
     });
-
     let noMatch = document.getElementById('noMatchesMsg');
     if (visibleCount === 0 && cards.length > 0) {
-      if(!noMatch) {
+      if (!noMatch) {
         const msg = document.createElement('div');
-        msg.className = 'empty';
-        msg.id = 'noMatchesMsg';
+        msg.className = 'empty'; msg.id = 'noMatchesMsg';
         msg.innerHTML = `<h3>No matches</h3><p>Try a different search term.</p>`;
         document.getElementById('inventoryGrid').appendChild(msg);
       }
-    } else if (noMatch) {
-      noMatch.remove();
-    }
+    } else if (noMatch) { noMatch.remove(); }
   });
 
-  document.getElementById('refreshBtn')?.addEventListener('click', ()=>{
-    syncFromCloud();
-    showToast('Data refreshed');
-  });
-  
+  document.getElementById('refreshBtn')?.addEventListener('click', ()=>{ syncFromCloud(); showToast('Data refreshed'); });
+
   document.getElementById('resetBtn')?.addEventListener('click', async () => {
-    if(confirm('This clears all items and sales history for everyone. Are you sure?')){
+    if (confirm('This clears all items and sales history for everyone. Are you sure?')) {
       await fetch(`${FIREBASE_DB_URL}.json`, { method: 'DELETE' });
-      state.items = []; 
-      state.log = []; 
-      state.brand = 'My Clothing Brand';
+      state.items = []; state.log = []; state.brand = 'My Clothing Brand';
       showToast('Cloud database cleared.');
       syncFromCloud();
     }
   });
-  
+
   document.querySelectorAll('[data-action]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const id = btn.dataset.id;
       const item = state.items.find(i=>i.id===id);
       const action = btn.dataset.action;
-      if(action === 'sell'){ modal = {type:'sell', item}; render(); }
-      if(action === 'restock'){ modal = {type:'restock', item}; render(); }
-      if(action === 'edit'){
-        state._editingId = id; state._pendingImage = null; state._removePhoto = false;
-        state.tab = 'add'; render();
-      }
-      if(action === 'delete'){
-        if(confirm(`Delete "${item.name}" from inventory? This can't be undone.`)){
+      if (action === 'sell') { modal = {type:'sell', item}; render(); }
+      if (action === 'restock') { modal = {type:'restock', item}; render(); }
+      if (action === 'edit') { state._editingId = id; state._pendingImage = null; state._removePhoto = false; state.tab = 'add'; render(); }
+      if (action === 'delete') {
+        if (confirm(`Delete "${item.name}" from inventory? This can't be undone.`)) {
           fetch(`${FIREBASE_DB_URL}items/${id}.json`, { method: 'DELETE' }).then(()=>{
             showToast(`Deleted "${item.name}"`);
             syncFromCloud();
@@ -1011,10 +1060,10 @@ function attachHandlers(){
       }
     });
   });
-  
+
+  // ---- admin: add/edit form ----
   const colorGroupsWrap = document.getElementById('colorGroupsWrap');
-  if(colorGroupsWrap){
-    
+  if (colorGroupsWrap) {
     document.getElementById('f-sizeType')?.addEventListener('change', (e) => {
       const type = e.target.value;
       document.querySelectorAll('.color-group').forEach((groupEl) => {
@@ -1031,28 +1080,20 @@ function attachHandlers(){
 
       dropdown.addEventListener('change', (e) => {
         const selectedSize = e.target.value;
-        if(!selectedSize) return;
-
-        const rowHtml = renderAddedSizeRow(selectedSize, 0);
-        containerList.insertAdjacentHTML('beforeend', rowHtml);
-
+        if (!selectedSize) return;
+        containerList.insertAdjacentHTML('beforeend', renderAddedSizeRow(selectedSize, 0));
         const sizeType = document.getElementById('f-sizeType').value;
-        const currentActiveRows = containerList.querySelectorAll('.added-size-row');
-        const activeSizes = Array.from(currentActiveRows).map(r => r.dataset.size);
+        const activeSizes = Array.from(containerList.querySelectorAll('.added-size-row')).map(r => r.dataset.size);
         dropdown.innerHTML = renderDropdownOptions(sizeType, activeSizes);
-
         const targetRow = containerList.querySelector(`[data-size="${selectedSize}"]`);
         targetRow.querySelector('.c-size-qty').focus();
       });
 
       containerList.addEventListener('click', (e) => {
-        if(e.target.classList.contains('remove-size-row')) {
-          const targetRow = e.target.closest('.added-size-row');
-          targetRow.remove();
-
+        if (e.target.classList.contains('remove-size-row')) {
+          e.target.closest('.added-size-row').remove();
           const sizeType = document.getElementById('f-sizeType').value;
-          const currentActiveRows = containerList.querySelectorAll('.added-size-row');
-          const activeSizes = Array.from(currentActiveRows).map(r => r.dataset.size);
+          const activeSizes = Array.from(containerList.querySelectorAll('.added-size-row')).map(r => r.dataset.size);
           dropdown.innerHTML = renderDropdownOptions(sizeType, activeSizes);
         }
       });
@@ -1060,20 +1101,15 @@ function attachHandlers(){
 
     document.querySelectorAll('.color-group').forEach(groupEl => {
       attachSizeGroupInteraction(groupEl);
-      
       groupEl.querySelector('.remove-color-group').addEventListener('click', () => {
-        if(document.querySelectorAll('.color-group').length > 1) {
-          groupEl.remove();
-        } else {
-          showToast("You must keep at least one color variation.", true);
-        }
+        if (document.querySelectorAll('.color-group').length > 1) groupEl.remove();
+        else showToast("You must keep at least one color variation.", true);
       });
     });
 
     document.getElementById('addColorGroup')?.addEventListener('click', ()=>{
       const type = document.getElementById('f-sizeType').value;
       const newIdx = document.querySelectorAll('.color-group').length;
-      
       const tempDiv = document.createElement('div');
       tempDiv.className = 'color-group';
       tempDiv.dataset.idx = newIdx;
@@ -1081,113 +1117,94 @@ function attachHandlers(){
         <div class="color-group-header">
           <input type="color" class="g-hex" value="#1f6f5c">
           <input type="text" class="g-name" placeholder="Color Name (e.g. Royal Blue)">
-          <button type="button" class="ghost remove-color-group">✕ Remove Color</button>
+          <button type="button" class="ghost remove-color-group">✕ Remove</button>
         </div>
         <div class="size-adder-row">
-          <span style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">Add Size Variant:</span>
-          <select class="size-dropdown-selector">
-            ${renderDropdownOptions(type, [])}
-          </select>
+          <span style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">Add size:</span>
+          <select class="size-dropdown-selector">${renderDropdownOptions(type, [])}</select>
         </div>
         <div class="added-sizes-list"></div>
       `;
-      
       colorGroupsWrap.appendChild(tempDiv);
       attachSizeGroupInteraction(tempDiv);
-      
       tempDiv.querySelector('.remove-color-group').addEventListener('click', () => {
-        if(document.querySelectorAll('.color-group').length > 1) {
-          tempDiv.remove();
-        } else {
-          showToast("You must keep at least one color variation.", true);
-        }
+        if (document.querySelectorAll('.color-group').length > 1) tempDiv.remove();
+        else showToast("You must keep at least one color variation.", true);
       });
     });
-  
+
     document.getElementById('f-image-file')?.addEventListener('change', async (e)=>{
       const file = e.target.files[0];
-      if(!file) return;
+      if (!file) return;
       try {
-        const dataUrl = await resizeImage(file);
-        state._pendingImage = dataUrl;
+        state._pendingImage = await resizeImage(file);
         state._removePhoto = false;
         render();
       } catch(err){ showToast('Could not load that photo', true); }
     });
-    
+
     document.getElementById('removePhoto')?.addEventListener('click', ()=>{
-      state._pendingImage = null;
-      state._removePhoto = true;
-      render();
+      state._pendingImage = null; state._removePhoto = true; render();
     });
-  
+
     document.getElementById('cancelFormBtn')?.addEventListener('click', ()=>{
       state._editingId = null; state._pendingImage = null; state._removePhoto = false;
       state.tab = 'inventory'; render();
     });
-  
+
     document.getElementById('saveItemBtn')?.addEventListener('click', async ()=>{
+      if (state._saving) return; // prevent double submits
       const nameInput = document.getElementById('f-name');
       const priceInput = document.getElementById('f-price');
       const sizeTypeInput = document.getElementById('f-sizeType');
-      
-      if(!nameInput || !priceInput || !sizeTypeInput) return;
-      
+      const categoryInput = document.getElementById('f-category');
+      if (!nameInput || !priceInput || !sizeTypeInput || !categoryInput) return;
+
       const name = nameInput.value.trim();
       const price = parseFloat(priceInput.value);
       const sizeType = sizeTypeInput.value;
-      
-      if(!name){ showToast('Item name is required', true); return; }
-      if(isNaN(price) || price < 0){ showToast('Enter a valid price', true); return; }
-      
+      const category = categoryInput.value;
+
+      if (!name) { showToast('Item name is required', true); nameInput.focus(); return; }
+      if (isNaN(price) || price < 0) { showToast('Enter a valid price', true); priceInput.focus(); return; }
+
       const colors = [];
       let missingColorName = false;
-      let missingSelection = true;
+      let anySizeSelected = false;
 
       document.querySelectorAll('.color-group').forEach(groupEl => {
         const colorName = groupEl.querySelector('.g-name').value.trim();
         const hex = groupEl.querySelector('.g-hex').value;
-        
-        if (!colorName) {
-          missingColorName = true;
-          return;
-        }
-
+        if (!colorName) { missingColorName = true; return; }
         groupEl.querySelectorAll('.added-size-row').forEach(row => {
-          missingSelection = false;
+          anySizeSelected = true;
           const size = row.dataset.size;
           const qtyVal = parseInt(row.querySelector('.c-size-qty').value, 10);
-          colors.push({
-            name: colorName,
-            hex: hex,
-            size: size,
-            qty: isNaN(qtyVal) ? 0 : qtyVal
-          });
+          colors.push({ name: colorName, hex, size, qty: isNaN(qtyVal) ? 0 : qtyVal });
         });
       });
 
-      if(missingColorName) {
-        showToast('Please enter a name for all your added colors', true);
-        return;
-      }
-      if(missingSelection) {
-        showToast('Please select at least one size variant and quantity for your color groups.', true);
-        return;
-      }
-  
+      if (missingColorName) { showToast('Please enter a name for all your added colors', true); return; }
+      if (!anySizeSelected) { showToast('Please add at least one size variant with a quantity', true); return; }
+
       let image = null;
-      if(state._pendingImage) image = state._pendingImage;
-      else if(state._editingId && !state._removePhoto){
+      if (state._pendingImage) image = state._pendingImage;
+      else if (state._editingId && !state._removePhoto) {
         const existing = state.items.find(i=>i.id===state._editingId);
         image = existing ? existing.image : null;
       }
-  
+
       const itemId = state._editingId || uid();
-      const itemData = {id: itemId, name, price, sizeType, colors, image};
-      
+      const itemData = { id: itemId, name, price, category, sizeType, colors, image };
+
+      state._saving = true;
+      const btn = document.getElementById('saveItemBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
       await cloudPut(`items/${itemId}`, itemData);
       showToast(state._editingId ? 'Item updated' : 'Item added to cloud inventory');
-      
+
+      state._saving = false;
       state._editingId = null; state._pendingImage = null; state._removePhoto = false;
       state.tab = 'inventory';
       syncFromCloud();
