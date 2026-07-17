@@ -282,7 +282,7 @@ let state = {
 };
 
 let modal = null;
-let toastMsg = null, toastTimer = null;
+let toastTimer = null;
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
@@ -349,10 +349,19 @@ async function syncFromCloud(isBackground = false){
 }
 
 function showToast(msg, isError){
-  toastMsg = {msg, isError};
-  render();
+  // Toasts are shown by adding a small element directly to the page —
+  // NOT by re-rendering the whole app. Re-rendering here used to wipe out
+  // whatever you'd already typed into the Add Item form the instant an
+  // error toast appeared (which is exactly why the name field kept
+  // clearing itself and needed several tries to save).
+  document.getElementById('toastEl')?.remove();
+  const t = document.createElement('div');
+  t.id = 'toastEl';
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>{ toastMsg = null; render(); }, 2600);
+  toastTimer = setTimeout(()=>{ t.remove(); }, 2600);
 }
 
 function totalStock(item){ return item.colors ? item.colors.reduce((s,c)=>s+c.qty,0) : 0; }
@@ -456,12 +465,6 @@ function render(){
   attachHandlers();
 
   if (modal) renderModal();
-  if (toastMsg) {
-    const t = document.createElement('div');
-    t.className = 'toast' + (toastMsg.isError ? ' error' : '');
-    t.textContent = toastMsg.msg;
-    document.body.appendChild(t);
-  }
 }
 
 // ---------- ROLE SELECT ----------
@@ -712,7 +715,9 @@ function renderAddForm(){
         </div>
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <input type="file" accept="image/*" id="f-image-file">
-          ${previewImage ? `<div><button type="button" class="ghost" style="padding: 6px 12px; font-size: 12px; min-height:auto;" id="removePhoto">Remove photo</button></div>` : ''}
+          <div id="removePhotoWrap" style="${previewImage ? '' : 'display:none'}">
+            <button type="button" class="ghost" style="padding: 6px 12px; font-size: 12px; min-height:auto;" id="removePhoto">Remove photo</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1139,12 +1144,28 @@ function attachHandlers(){
       try {
         state._pendingImage = await resizeImage(file);
         state._removePhoto = false;
-        render();
+        // Update only the preview thumbnail in place — do NOT call render() here.
+        // A full re-render would rebuild the whole Add Item form from scratch,
+        // which silently clears the name/price/colors you've already typed
+        // (that was the cause of the "item name is required" bug).
+        const wrap = document.getElementById('imgPreviewWrap');
+        if (wrap) {
+          wrap.innerHTML = `<img id="imgPreview" src="${state._pendingImage}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--line)">`;
+        }
+        const removeWrap = document.getElementById('removePhotoWrap');
+        if (removeWrap) removeWrap.style.display = '';
       } catch(err){ showToast('Could not load that photo', true); }
     });
 
     document.getElementById('removePhoto')?.addEventListener('click', ()=>{
-      state._pendingImage = null; state._removePhoto = true; render();
+      state._pendingImage = null; state._removePhoto = true;
+      // Same reasoning as above: update the DOM in place, don't re-render the form.
+      const wrap = document.getElementById('imgPreviewWrap');
+      if (wrap) {
+        wrap.innerHTML = `<div id="imgPreview" style="width:80px;height:80px;border-radius:8px;background:#f2f0eb;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-size:11px;text-align:center;padding:4px">No photo</div>`;
+      }
+      const removeWrap = document.getElementById('removePhotoWrap');
+      if (removeWrap) removeWrap.style.display = 'none';
     });
 
     document.getElementById('cancelFormBtn')?.addEventListener('click', ()=>{
