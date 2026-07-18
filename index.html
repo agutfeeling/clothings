@@ -296,6 +296,7 @@ let state = {
 
 let modal = null;
 let toastTimer = null;
+let lastSyncSnapshot = null;
 
 // Maps a colour-group's gid -> the photo data-URL currently staged for it
 // while the Add/Edit form is open. Kept outside `state` and reseeded each
@@ -372,17 +373,30 @@ async function syncFromCloud(isBackground = false){
   const rawItems = await cloudFetch('items');
   const items = [];
   if (rawItems) Object.keys(rawItems).forEach(id => { if (rawItems[id]) items.push(normalizeItem(rawItems[id])); });
-  state.items = items;
 
   const rawLog = await cloudFetch('log');
   const log = [];
   if (rawLog) Object.keys(rawLog).forEach(id => { if (rawLog[id]) log.push(rawLog[id]); });
-  state.log = log.sort((a,b) => a.time - b.time);
+  log.sort((a,b) => a.time - b.time);
 
   const rawBrand = await cloudFetch('brand');
-  state.brand = typeof rawBrand === 'string' ? rawBrand : 'My Clothing Brand';
+  const brand = typeof rawBrand === 'string' ? rawBrand : 'My Clothing Brand';
 
+  // Skip the redraw entirely if nothing actually changed — this is what was
+  // causing the whole screen (and every photo) to flicker every ~8 seconds
+  // even when no one had made any changes.
+  const snapshot = JSON.stringify({ items, log, brand });
+  const changed = snapshot !== lastSyncSnapshot;
+  lastSyncSnapshot = snapshot;
+
+  state.items = items;
+  state.log = log;
+  state.brand = brand;
+
+  const firstLoad = !state.ready;
   state.ready = true;
+
+  if (isBackground && !firstLoad && !changed) return;
   render();
 }
 
@@ -445,7 +459,7 @@ function thumbHtml(item, size){
 }
 
 function resizeImage(file, maxDim, quality){
-  maxDim = maxDim || 480; quality = quality || 0.72;
+  maxDim = maxDim || 1000; quality = quality || 0.86;
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
     reader.onload = e => {
