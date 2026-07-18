@@ -276,6 +276,13 @@ const FIREBASE_DB_URL = "https://clothing-inventory-dc4f3-default-rtdb.asia-sout
 // casual browsing from turning into casual editing.
 const ADMIN_PASSWORD = "admin123";
 
+// Photos are uploaded to Cloudinary (a free image-hosting/CDN service) instead
+// of being embedded directly in the database. Only a short link is stored per
+// photo, which keeps the database small and fast no matter how many items you
+// add, and lets photos load quickly and sharply from a real CDN.
+const CLOUDINARY_CLOUD_NAME = "wccuyqql";
+const CLOUDINARY_UPLOAD_PRESET = "clothing_inventory";
+
 let state = {
   items: [],
   log: [],
@@ -453,13 +460,33 @@ function thumbHtml(item, size){
   size = size || 56;
   const img = firstImage(item);
   const clickable = `data-thumb-id="${item.id}"`;
-  if (img) return `<img class="thumb" style="width:${size}px;height:${size}px" ${clickable} src="${img}" alt="${esc(item.name)}">`;
+  if (img) return `<img class="thumb" style="width:${size}px;height:${size}px" ${clickable} src="${cloudinaryUrl(img, `w_${size*2},q_auto,f_auto,c_fill`)}" alt="${esc(item.name)}">`;
   const initial = ((item && item.name) || '?').trim().charAt(0).toUpperCase() || '?';
   return `<div class="thumb-placeholder" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.4)}px" ${clickable}>${initial}</div>`;
 }
 
-function resizeImage(file, maxDim, quality){
-  maxDim = maxDim || 1000; quality = quality || 0.86;
+function cloudinaryConfigured(){
+  return CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET
+    && CLOUDINARY_CLOUD_NAME !== 'YOUR_CLOUD_NAME' && CLOUDINARY_UPLOAD_PRESET !== 'YOUR_UNSIGNED_PRESET';
+}
+
+// Inserts a Cloudinary transformation (e.g. "w_200,q_auto,f_auto") into a
+// stored photo URL so the browser only ever downloads the size it needs —
+// a tiny thumbnail in a grid, a bigger image in the detail viewer, etc.
+// Older photos saved before Cloudinary was set up are plain base64 data —
+// those are returned unchanged since there's nothing to transform.
+function cloudinaryUrl(url, transform){
+  if (!url || !url.includes('/upload/')) return url;
+  return url.replace('/upload/', `/upload/${transform}/`);
+}
+
+// Shrinks a raw photo (e.g. a 12MB phone camera shot) down to a sane size
+// client-side before it's uploaded, then hands it to Cloudinary. Cloudinary
+// stores the full version and serves resized/optimized copies on demand via
+// cloudinaryUrl() above — so this pre-resize is just to keep uploads fast
+// and save storage, not to control final display quality.
+function resizeToBlob(file, maxDim, quality){
+  maxDim = maxDim || 1600; quality = quality || 0.9;
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
     reader.onload = e => {
@@ -471,7 +498,7 @@ function resizeImage(file, maxDim, quality){
         const canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob failed')), 'image/jpeg', quality);
       };
       img.onerror = () => reject(new Error('image load failed'));
       img.src = e.target.result;
@@ -479,6 +506,22 @@ function resizeImage(file, maxDim, quality){
     reader.onerror = () => reject(new Error('file read failed'));
     reader.readAsDataURL(file);
   });
+}
+
+async function uploadPhoto(file){
+  if (!cloudinaryConfigured()) throw new Error('CLOUDINARY_NOT_CONFIGURED');
+  const blob = await resizeToBlob(file);
+  const formData = new FormData();
+  formData.append('file', blob, 'photo.jpg');
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+    method: 'POST',
+    body: formData
+  });
+  if (!res.ok) throw new Error('Upload failed');
+  const data = await res.json();
+  if (!data.secure_url) throw new Error('Upload failed');
+  return data.secure_url;
 }
 
 // ---------- size chip markup helpers ----------
@@ -701,7 +744,7 @@ function renderInventory(){
           ${(item.colors||[]).map((v, vi) => `
             <div class="breakdown-row">
               <span style="display:flex; align-items:center; gap:6px; font-weight:600;">
-                ${v.image ? `<img src="${v.image}" style="width:22px;height:22px;border-radius:5px;object-fit:cover;">` : `<span style="width:22px;height:22px;border-radius:5px;background:#e3ddd2;display:inline-block;"></span>`}
+                ${v.image ? `<img src="${cloudinaryUrl(v.image, 'w_60,q_auto,f_auto,c_fill')}" style="width:22px;height:22px;border-radius:5px;object-fit:cover;">` : `<span style="width:22px;height:22px;border-radius:5px;background:#e3ddd2;display:inline-block;"></span>`}
                 Colour ${vi+1}
               </span>
               <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--ink-soft);">
@@ -848,11 +891,11 @@ function renderModal(){
       container.innerHTML = `
         <div class="modal-title-row"><h3>${esc(item.name)}</h3></div>
         <div class="detail-main-image-wrap" id="detailMainImgWrap">
-          ${s && s.image ? `<img class="detail-main-image" src="${s.image}" alt="">` : `<div class="detail-main-placeholder">${esc(item.name).charAt(0).toUpperCase() || '?'}</div>`}
+          ${s && s.image ? `<img class="detail-main-image" src="${cloudinaryUrl(s.image, 'w_900,q_auto,f_auto')}" alt="">` : `<div class="detail-main-placeholder">${esc(item.name).charAt(0).toUpperCase() || '?'}</div>`}
         </div>
         ${slides.length > 1 ? `<div class="detail-thumbs">
           ${slides.map((sl,i) => `<button type="button" class="detail-thumb ${i===idx?'active':''}" data-idx="${i}">
-            ${sl.image ? `<img src="${sl.image}" alt="">` : ''}
+            ${sl.image ? `<img src="${cloudinaryUrl(sl.image, 'w_120,q_auto,f_auto,c_fill')}" alt="">` : ''}
           </button>`).join('')}
         </div>` : ''}
         <div style="display:flex; align-items:center; gap:10px; margin:14px 0 4px;">
@@ -923,7 +966,7 @@ function renderModal(){
           <div class="modal-variant-thumbs">
             ${availableVariants.map((v,i) => `
               <button type="button" class="modal-variant-thumb ${i===selVariantIdx?'active':''}" data-idx="${i}">
-                ${v.image ? `<img src="${v.image}" alt="">` : ''}
+                ${v.image ? `<img src="${cloudinaryUrl(v.image, 'w_120,q_auto,f_auto,c_fill')}" alt="">` : ''}
               </button>
             `).join('')}
           </div>
@@ -989,7 +1032,7 @@ function renderModal(){
         ${variants.map((v, vi) => `
           <div class="restock-variant-block">
             <div class="restock-variant-head">
-              ${v.image ? `<img src="${v.image}" alt="">` : ''} Colour ${vi+1}
+              ${v.image ? `<img src="${cloudinaryUrl(v.image, 'w_80,q_auto,f_auto,c_fill')}" alt="">` : ''} Colour ${vi+1}
             </div>
             ${Object.keys(v.sizes||{}).map(sz => `
               <div class="color-row" data-vidx="${vi}" data-size="${esc(sz)}" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
@@ -1158,15 +1201,23 @@ function attachHandlers(){
     document.getElementById('f-main-image')?.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
+      const preview = document.getElementById('mainPhotoPreview');
+      const label = document.querySelector('label[for="f-main-image"]');
+      if (preview) preview.innerHTML = `<div class="item-photo-placeholder">Uploading…</div>`;
+      if (label) label.textContent = 'Uploading…';
       try {
-        pendingMainImage = await resizeImage(file);
-        const preview = document.getElementById('mainPhotoPreview');
-        if (preview) preview.innerHTML = `<img src="${pendingMainImage}" alt="">`;
-        const label = document.querySelector('label[for="f-main-image"]');
+        pendingMainImage = await uploadPhoto(file);
+        if (preview) preview.innerHTML = `<img src="${cloudinaryUrl(pendingMainImage, 'w_200,q_auto,f_auto,c_fill')}" alt="">`;
         if (label) label.textContent = 'Change photo';
         const removeWrap = document.getElementById('removeMainPhotoWrap');
         if (removeWrap) removeWrap.style.display = '';
-      } catch (err) { showToast('Could not load that photo', true); }
+      } catch (err) {
+        if (preview) preview.innerHTML = pendingMainImage ? `<img src="${cloudinaryUrl(pendingMainImage, 'w_200,q_auto,f_auto,c_fill')}" alt="">` : `<div class="item-photo-placeholder">📷<br>No photo</div>`;
+        if (label) label.textContent = pendingMainImage ? 'Change photo' : 'Upload photo';
+        if (err && err.message === 'CLOUDINARY_NOT_CONFIGURED') showToast('Photo hosting isn\'t set up yet', true);
+        else showToast('Could not upload that photo — check your connection and try again', true);
+      }
+      e.target.value = '';
     });
 
     document.getElementById('removeMainPhoto')?.addEventListener('click', () => {
@@ -1193,15 +1244,24 @@ function attachHandlers(){
       groupEl.querySelector('.variant-file-input').addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+        const preview = groupEl.querySelector('.variant-photo-preview');
+        const label = groupEl.querySelector('.photo-upload-label');
+        preview.innerHTML = `<div class="variant-photo-placeholder">Uploading…</div>`;
+        if (label) label.textContent = 'Uploading…';
         try {
-          const dataUrl = await resizeImage(file);
-          pendingVariantImages[gid] = dataUrl;
+          const url = await uploadPhoto(file);
+          pendingVariantImages[gid] = url;
           // Update just this group's preview + label — never call render() here.
-          const preview = groupEl.querySelector('.variant-photo-preview');
-          preview.innerHTML = `<img src="${dataUrl}" alt="">`;
-          const label = groupEl.querySelector('.photo-upload-label');
+          preview.innerHTML = `<img src="${cloudinaryUrl(url, 'w_200,q_auto,f_auto,c_fill')}" alt="">`;
           if (label) label.textContent = 'Change photo';
-        } catch (err) { showToast('Could not load that photo', true); }
+        } catch (err) {
+          const existing = pendingVariantImages[gid];
+          preview.innerHTML = existing ? `<img src="${cloudinaryUrl(existing, 'w_200,q_auto,f_auto,c_fill')}" alt="">` : `<div class="variant-photo-placeholder">📷<br>No photo</div>`;
+          if (label) label.textContent = existing ? 'Change photo' : 'Upload photo';
+          if (err && err.message === 'CLOUDINARY_NOT_CONFIGURED') showToast('Photo hosting isn\'t set up yet', true);
+          else showToast('Could not upload that photo — check your connection and try again', true);
+        }
+        e.target.value = '';
       });
 
       groupEl.querySelector('.size-chip-grid').addEventListener('click', (e) => {
