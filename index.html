@@ -120,11 +120,12 @@
   }
   button.primary:hover { background: var(--accent-dark); }
   button.primary:active { transform: scale(.98); }
-  button.ghost {
+  .ghost {
     background: none; border: 1px solid var(--line); border-radius: 9px; padding: 10px 15px;
     font-size: 13.5px; cursor: pointer; color: var(--ink); font-family: inherit; min-height: 44px;
+    display: inline-flex; align-items: center; justify-content: center; text-align: center;
   }
-  button.ghost:hover { border-color: var(--accent); color: var(--accent-dark); }
+  .ghost:hover { border-color: var(--accent); color: var(--accent-dark); }
   button.link {
     background: none; border: none; color: var(--accent); text-decoration: none; font-weight: 600;
     cursor: pointer; font-size: 13px; font-family: inherit; padding: 6px 0;
@@ -162,20 +163,13 @@
     border-radius: 10px; background: var(--amber-soft); color: var(--gold); display: flex; align-items: center;
     justify-content: center; font-family: 'Fraunces', Georgia, serif; font-weight: 700; flex-shrink: 0; cursor: pointer;
   }
-  .thumb-full { width: 100%; border-radius: 10px; object-fit: cover; max-height: 260px; background: #f2f0eb; }
-  .thumb-full-placeholder { width: 100%; height: 200px; border-radius: 10px; background: var(--amber-soft); color: var(--gold); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',Georgia,serif; font-weight:700; font-size:56px; }
-
-  .card-swatches { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
-  .swatch-dot { width: 13px; height: 13px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); display: inline-block; }
-  .swatch-wrapper { display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--ink-soft); background: #faf9f6; padding: 2px 7px; border-radius: 20px; border: 1px solid var(--line); }
 
   .breakdown-toggle-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; border-top: 1px solid var(--line); margin-top: 2px; padding-top: 8px; background: none; border-left: none; border-right: none; border-bottom: none; cursor: pointer; color: var(--accent); font-weight: 600; font-size: 12.5px; font-family: inherit; text-align: left; min-height: auto; }
   .breakdown-toggle-btn::after { content: '▾'; font-size: 10px; margin-left: 4px; }
   .breakdown-toggle-btn.expanded::after { content: '▴'; }
   .breakdown-panel { display: none; background: #faf9f6; border-radius: 8px; padding: 8px 12px; font-size: 12.5px; border: 1px solid var(--line); }
-  .breakdown-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed var(--line); gap: 8px; }
+  .breakdown-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed var(--line); gap: 8px; }
   .breakdown-row:last-child { border-bottom: none; }
-  .breakdown-row .dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); margin-right: 6px; display: inline-block; }
 
   .card-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; padding-top: 6px; }
   .card-actions button { flex: 1; min-width: 56px; padding: 9px 8px; font-size: 12.5px; }
@@ -192,21 +186,31 @@
   .field-row .field { flex: 1; }
 
   .color-group { background: #faf9f6; border: 1px solid var(--line); border-radius: 9px; padding: 14px; margin-bottom: 12px; }
-  .color-group-header { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
-  .color-group-header input[type=color] { width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 8px; padding: 2px; background: #fff; }
-  .color-group-header input[type=text] { flex: 1; min-width: 120px; }
 
-  .size-adder-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; background: #f0ede6; padding: 8px 10px; border-radius: 7px; flex-wrap: wrap; }
-  .size-adder-row select { width: auto; padding: 8px; font-size: 13px; flex: 1; min-width: 140px; }
+  .item-photo-row { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+  .item-photo-preview { width: 96px; height: 96px; border-radius: 10px; overflow: hidden; background: #fff; border: 1px solid var(--line); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .item-photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .item-photo-placeholder { color: var(--ink-soft); font-size: 10.5px; text-align: center; line-height: 1.4; }
+  .item-photo-actions { display: flex; flex-direction: column; gap: 8px; justify-content: center; }
 
-  .added-sizes-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
-  .added-size-row { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); padding: 8px 10px; border-radius: 7px; flex-wrap: wrap; }
-  .added-size-name { font-weight: 600; font-size: 13px; width: 55px; }
-  .added-size-row input[type=number] { padding: 7px 8px; max-width: 90px; font-size: 14px; }
+  .variant-photo-row { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; }
+  .variant-photo-preview { width: 84px; height: 84px; border-radius: 10px; overflow: hidden; background: #fff; border: 1px solid var(--line); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .variant-photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .variant-photo-placeholder { color: var(--ink-soft); font-size: 10.5px; text-align: center; line-height: 1.4; }
+  .variant-photo-actions { display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+  .photo-upload-label { min-width: 130px; }
+
+  .size-chip-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .size-chip { border: 1px solid var(--line); background: #fff; border-radius: 9px; padding: 10px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: inherit; color: var(--ink); min-height: 44px; }
+  .size-chip.active { background: var(--accent-soft); border-color: var(--accent); padding: 6px 8px 6px 12px; display: inline-flex; align-items: center; gap: 8px; cursor: default; }
+  .size-chip-label { font-weight: 700; font-size: 13px; color: var(--accent-dark); }
+  .size-chip-stepper { display: flex; align-items: center; gap: 6px; }
+  .stepper-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--accent); background: #fff; color: var(--accent-dark); font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; font-family: inherit; }
+  .stepper-btn:active { background: var(--accent-soft); }
+  .stepper-qty { min-width: 16px; text-align: center; font-weight: 700; font-size: 13.5px; }
 
   .form-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
   .form-actions button { flex: 1; min-width: 140px; }
-  .photo-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 
   /* ---------- MODAL ---------- */
   .overlay { position: fixed; inset: 0; background: rgba(20,20,15,.5); display: flex; align-items: flex-end; justify-content: center; padding: 0; z-index: 50; animation: fadeIn .15s ease; }
@@ -217,9 +221,10 @@
   .modal-title-row { display: flex; gap: 10px; align-items: center; margin-bottom: 4px; }
   .modal .sub { color: var(--ink-soft); font-size: 13px; margin-bottom: 16px; }
 
-  .modal-swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; margin-top: 4px; }
-  .modal-swatch-btn { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid var(--line); border-radius: 20px; background: #fff; cursor: pointer; font-size: 13.5px; font-weight: 500; font-family: inherit; color: var(--ink); min-height: 40px; }
-  .modal-swatch-btn.active { border-color: var(--accent); background: #f0f7f5; outline: 2px solid var(--accent); }
+  .modal-variant-thumbs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; margin-top: 4px; }
+  .modal-variant-thumb { width: 56px; height: 56px; border-radius: 9px; overflow: hidden; border: 2px solid var(--line); padding: 0; cursor: pointer; background: #f2f0eb; }
+  .modal-variant-thumb.active { border-color: var(--accent); outline: 2px solid var(--accent); }
+  .modal-variant-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
   .modal-sizes { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; margin-top: 4px; }
   .modal-size-btn { padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; text-align: center; min-width: 58px; min-height: 44px; color: var(--ink); }
@@ -228,13 +233,23 @@
   .modal-size-btn .qty-label { display: block; font-size: 10px; font-weight: normal; margin-top: 2px; opacity: 0.7; }
   .modal-size-btn.active .qty-label { opacity: 0.9; }
 
-  /* customer detail view */
-  .detail-color-block { border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
-  .detail-color-head { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; margin-bottom: 8px; }
-  .detail-size-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  /* staff photo viewer */
+  .detail-main-image-wrap { width: 100%; border-radius: 12px; overflow: hidden; background: #f2f0eb; touch-action: pan-y; }
+  .detail-main-image { width: 100%; max-height: 320px; object-fit: cover; display: block; }
+  .detail-main-placeholder { width: 100%; height: 220px; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', Georgia, serif; font-weight: 700; font-size: 48px; color: var(--gold); background: var(--amber-soft); }
+  .detail-thumbs { display: flex; gap: 8px; overflow-x: auto; margin-top: 8px; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+  .detail-thumb { flex-shrink: 0; width: 54px; height: 54px; border-radius: 8px; overflow: hidden; border: 2px solid transparent; padding: 0; cursor: pointer; background: #f2f0eb; }
+  .detail-thumb.active { border-color: var(--accent); }
+  .detail-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .detail-size-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
   .detail-size-chip { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 12.5px; font-weight: 600; background: #faf9f6; }
   .detail-size-chip.avail { background: var(--accent-soft); color: var(--accent-dark); border-color: var(--accent-soft); }
   .detail-size-chip.out { background: var(--danger-soft); color: var(--danger); border-color: var(--danger-soft); text-decoration: line-through; opacity: .8; }
+
+  .restock-variant-block { margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px dashed var(--line); }
+  .restock-variant-block:last-child { border-bottom: none; }
+  .restock-variant-head { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13.5px; margin-bottom: 8px; }
+  .restock-variant-head img { width: 30px; height: 30px; border-radius: 6px; object-fit: cover; }
 
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { text-align: left; color: var(--ink-soft); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding: 9px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
@@ -275,14 +290,19 @@ let state = {
   custSize: '',
 
   _editingId: null,
-  _pendingImage: null,
-  _removePhoto: false,
   _saving: false,
   _loginError: ''
 };
 
 let modal = null;
 let toastTimer = null;
+
+// Maps a colour-group's gid -> the photo data-URL currently staged for it
+// while the Add/Edit form is open. Kept outside `state` and reseeded each
+// time the form is opened, and read directly at save time.
+let pendingVariantImages = {};
+// Staged cover photo for the item as a whole (shown above the colour photos).
+let pendingMainImage = null;
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
@@ -321,10 +341,28 @@ async function cloudPut(path, data) {
   }
 }
 
+// Converts old-format items (colour name + hex, one row per size) into the
+// new nested shape: { variantId, image, sizes: {size: qty} }. Anything
+// already in the new shape passes through untouched.
+function normalizeItem(raw){
+  if (!raw) return raw;
+  let colors = raw.colors || [];
+  if (colors.length && colors[0] && colors[0].variantId === undefined) {
+    const groups = {};
+    const order = [];
+    colors.forEach(c => {
+      const key = (c.name || '') + '_' + (c.hex || '');
+      if (!groups[key]) { groups[key] = { variantId: uid(), image: raw.image || null, sizes: {} }; order.push(key); }
+      groups[key].sizes[c.size || 'Free size'] = c.qty;
+    });
+    colors = order.map(k => groups[k]);
+  }
+  return { ...raw, colors };
+}
+
 async function syncFromCloud(isBackground = false){
   if (isBackground) {
-    // Never let a background refresh overwrite what someone is actively doing —
-    // this is what used to wipe out the "add item" form mid-typing.
+    // Never let a background refresh overwrite what someone is actively doing.
     const focused = document.activeElement;
     const isTyping = focused && ['INPUT','SELECT','TEXTAREA'].includes(focused.tagName);
     const isEditingForm = state.role === 'admin' && state.tab === 'add';
@@ -333,7 +371,7 @@ async function syncFromCloud(isBackground = false){
 
   const rawItems = await cloudFetch('items');
   const items = [];
-  if (rawItems) Object.keys(rawItems).forEach(id => { if (rawItems[id]) items.push(rawItems[id]); });
+  if (rawItems) Object.keys(rawItems).forEach(id => { if (rawItems[id]) items.push(normalizeItem(rawItems[id])); });
   state.items = items;
 
   const rawLog = await cloudFetch('log');
@@ -349,11 +387,9 @@ async function syncFromCloud(isBackground = false){
 }
 
 function showToast(msg, isError){
-  // Toasts are shown by adding a small element directly to the page —
-  // NOT by re-rendering the whole app. Re-rendering here used to wipe out
-  // whatever you'd already typed into the Add Item form the instant an
-  // error toast appeared (which is exactly why the name field kept
-  // clearing itself and needed several tries to save).
+  // Toasts are a small standalone element, never a full re-render — a full
+  // render() here would rebuild whatever screen is open (including wiping
+  // an in-progress Add Item form) just to show a message.
   document.getElementById('toastEl')?.remove();
   const t = document.createElement('div');
   t.id = 'toastEl';
@@ -364,7 +400,10 @@ function showToast(msg, isError){
   toastTimer = setTimeout(()=>{ t.remove(); }, 2600);
 }
 
-function totalStock(item){ return item.colors ? item.colors.reduce((s,c)=>s+c.qty,0) : 0; }
+function totalStock(item){
+  if (!item.colors) return 0;
+  return item.colors.reduce((sum, v) => sum + Object.values(v.sizes || {}).reduce((s,q)=>s+q, 0), 0);
+}
 function lowStockCount(){ return state.items.filter(i => totalStock(i) <= 5).length; }
 
 function stockBadgeHtml(item){
@@ -379,15 +418,29 @@ function catLabel(key){
   return c ? c.label : 'Unisex';
 }
 
-function thumbHtml(item, size, big){
+function itemHasSize(item, size){
+  if (!size || !item.colors) return true;
+  return item.colors.some(v => v.sizes && v.sizes[size] > 0);
+}
+
+function firstImage(item){
+  return item.image || (item.colors && item.colors[0] && item.colors[0].image) || null;
+}
+
+function aggregateSizes(item){
+  const agg = {};
+  (item.colors || []).forEach(v => {
+    Object.entries(v.sizes || {}).forEach(([sz, qty]) => { agg[sz] = (agg[sz] || 0) + qty; });
+  });
+  return agg;
+}
+
+function thumbHtml(item, size){
   size = size || 56;
+  const img = firstImage(item);
   const clickable = `data-thumb-id="${item.id}"`;
-  if (item && item.image) {
-    if (big) return `<img class="thumb-full" ${clickable} src="${item.image}" alt="${esc(item.name)}">`;
-    return `<img class="thumb" style="width:${size}px;height:${size}px" ${clickable} src="${item.image}" alt="${esc(item.name)}">`;
-  }
+  if (img) return `<img class="thumb" style="width:${size}px;height:${size}px" ${clickable} src="${img}" alt="${esc(item.name)}">`;
   const initial = ((item && item.name) || '?').trim().charAt(0).toUpperCase() || '?';
-  if (big) return `<div class="thumb-full-placeholder" ${clickable}>${initial}</div>`;
   return `<div class="thumb-placeholder" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.4)}px" ${clickable}>${initial}</div>`;
 }
 
@@ -414,38 +467,41 @@ function resizeImage(file, maxDim, quality){
   });
 }
 
-function groupColors(colors) {
-  const groups = {};
-  if (!colors) return [];
-  colors.forEach(c => {
-    const key = `${c.name}_${c.hex}`;
-    if (!groups[key]) groups[key] = { name: c.name, hex: c.hex, sizes: {} };
-    groups[key].sizes[c.size || 'Free size'] = c.qty;
-  });
-  return Object.values(groups);
+// ---------- size chip markup helpers ----------
+function inactiveSizeChipHtml(sz){
+  return `<button type="button" class="size-chip" data-size="${esc(sz)}">${esc(sz)}</button>`;
 }
-
-function itemHasSize(item, size){
-  if (!size || !item.colors) return true;
-  return item.colors.some(c => (c.size || 'Free size') === size && c.qty > 0);
-}
-
-function renderAddedSizeRow(size, qty) {
-  return `
-    <div class="added-size-row" data-size="${size}">
-      <span class="added-size-name">${size}</span>
-      <input type="number" class="c-size-qty" min="0" placeholder="Quantity" value="${qty !== undefined ? qty : 0}">
-      <button type="button" class="link remove-size-row" style="color:var(--danger); margin-left:auto;">Remove</button>
+function activeSizeChipHtml(sz, qty){
+  return `<div class="size-chip active" data-size="${esc(sz)}" data-qty="${qty}">
+    <span class="size-chip-label">${esc(sz)}</span>
+    <div class="size-chip-stepper">
+      <button type="button" class="stepper-btn minus">−</button>
+      <span class="stepper-qty">${qty}</span>
+      <button type="button" class="stepper-btn plus">+</button>
     </div>
-  `;
+  </div>`;
 }
-
-function renderDropdownOptions(sizeType, existingSizes) {
+function sizeChipGridHtml(sizeType, sizesMap){
   const allSizes = sizeType === 'denim' ? DENIM_SIZES : REGULAR_SIZES;
-  const filtered = allSizes.filter(s => !existingSizes.includes(s));
-  let html = `<option value="" disabled selected>+ Add Size Variant</option>`;
-  filtered.forEach(s => { html += `<option value="${s}">${s}</option>`; });
-  return html;
+  return `<div class="size-chip-grid">${allSizes.map(sz => {
+    const qty = sizesMap && sizesMap[sz] !== undefined ? sizesMap[sz] : null;
+    return qty !== null ? activeSizeChipHtml(sz, qty) : inactiveSizeChipHtml(sz);
+  }).join('')}</div>`;
+}
+function colorGroupInnerHtml(gid, sizeType, sizesMap, image){
+  return `
+    <div class="variant-photo-row">
+      <div class="variant-photo-preview">
+        ${image ? `<img src="${image}" alt="">` : `<div class="variant-photo-placeholder">📷<br>No photo</div>`}
+      </div>
+      <div class="variant-photo-actions">
+        <label class="ghost photo-upload-label" for="vfile-${gid}">${image ? 'Change photo' : 'Upload photo'}</label>
+        <input type="file" accept="image/*" class="variant-file-input" id="vfile-${gid}" style="display:none">
+        <button type="button" class="ghost remove-color-group" style="color:var(--danger)">✕ Remove colour</button>
+      </div>
+    </div>
+    ${sizeChipGridHtml(sizeType, sizesMap)}
+  `;
 }
 
 // ============================================================
@@ -477,7 +533,7 @@ function renderRoleSelect(){
         <div class="role-card" id="pickCustomer">
           <div class="icon">👀</div>
           <h2>Check Stock</h2>
-          <p>Browse items, search by name or size, and see what colours and sizes are available. No changes can be made here.</p>
+          <p>Browse items, search by name or size, and see what's available. No changes can be made here.</p>
         </div>
         <div class="role-card" id="pickAdmin">
           <div class="icon">🔒</div>
@@ -506,14 +562,14 @@ function renderAdminLogin(){
   `;
 }
 
-// ---------- CUSTOMER APP ----------
+// ---------- CUSTOMER (STAFF) APP ----------
 function renderCustomerApp(){
   let html = `<div class="screen">
     <div class="topbar">
       <div class="brand-static">${esc(state.brand)}</div>
       <button class="role-pill" id="switchToAdmin">🔒 Admin</button>
     </div>
-    <div class="tagline">Tap any item to see which colours and sizes are in stock.</div>
+    <div class="tagline">Tap any item to see its photos and what's in stock.</div>
 
     <div class="chip-row">
       <button class="chip ${state.custCategory==='all'?'active':''}" data-cat="all">All</button>
@@ -549,7 +605,6 @@ function renderCustomerApp(){
   } else {
     html += '<div class="grid">';
     for (const item of filtered) {
-      const colorGroups = groupColors(item.colors);
       html += `<div class="card">
         <div class="card-head">
           ${thumbHtml(item, 60)}
@@ -560,15 +615,7 @@ function renderCustomerApp(){
           </div>
         </div>
         ${stockBadgeHtml(item)}
-        <div class="card-swatches">
-          ${colorGroups.map(g => `
-            <div class="swatch-wrapper">
-              <span class="swatch-dot" style="background:${esc(g.hex)}"></span>
-              <span>${esc(g.name)}</span>
-            </div>
-          `).join('')}
-        </div>
-        <button class="ghost" data-thumb-id="${item.id}" style="width:100%">View colours &amp; sizes</button>
+        <button class="ghost" data-thumb-id="${item.id}" style="width:100%">View photos &amp; availability</button>
       </div>`;
     }
     html += '</div>';
@@ -625,7 +672,6 @@ function renderInventory(){
   } else {
     for (const item of items) {
       const total = totalStock(item);
-      const colorGroups = groupColors(item.colors);
       html += `<div class="card" data-item-name="${esc(item.name.toLowerCase())}">
         <div class="card-head">
           ${thumbHtml(item, 56)}
@@ -636,26 +682,19 @@ function renderInventory(){
           </div>
         </div>
         <div class="total-stock">Total available: <b>${total}</b> piece${total===1?'':'s'}</div>
-        <div class="card-swatches">
-          ${colorGroups.map(g => `
-            <div class="swatch-wrapper" title="${esc(g.name)}">
-              <span class="swatch-dot" style="background:${esc(g.hex)}"></span>
-              <span>${esc(g.name)}</span>
-            </div>
-          `).join('')}
-        </div>
         <button type="button" class="breakdown-toggle-btn" data-target="breakdown-${item.id}">Stock Breakdown</button>
         <div class="breakdown-panel" id="breakdown-${item.id}">
-          ${colorGroups.map(g => `
+          ${(item.colors||[]).map((v, vi) => `
             <div class="breakdown-row">
-              <span style="display:flex; align-items:center; font-weight:600;">
-                <span class="dot" style="background:${esc(g.hex)}"></span>${esc(g.name)}
+              <span style="display:flex; align-items:center; gap:6px; font-weight:600;">
+                ${v.image ? `<img src="${v.image}" style="width:22px;height:22px;border-radius:5px;object-fit:cover;">` : `<span style="width:22px;height:22px;border-radius:5px;background:#e3ddd2;display:inline-block;"></span>`}
+                Colour ${vi+1}
               </span>
               <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--ink-soft);">
-                ${Object.entries(g.sizes).map(([sz, qty]) => `${sz}:<b>${qty}</b>`).join(', ')}
+                ${Object.entries(v.sizes||{}).map(([sz, qty]) => `${sz}:<b>${qty}</b>`).join(', ')}
               </span>
             </div>
-          `).join('')}
+          `).join('') || '<p class="sub" style="margin:0">No colours added yet.</p>'}
         </div>
         <div class="card-actions">
           <button class="primary" data-action="sell" data-id="${item.id}" ${total===0?'disabled':''}>Sell</button>
@@ -673,15 +712,24 @@ function renderInventory(){
 function renderAddForm(){
   const editItem = state._editingId ? state.items.find(i=>i.id===state._editingId) : null;
   const isEdit = !!editItem;
-
-  const defaultGroup = [{name:'', hex:'#1f6f5c', sizes: {}}];
-  const colorGroups = editItem ? groupColors(editItem.colors) : defaultGroup;
   const sizeType = editItem ? editItem.sizeType : 'regular';
   const category = editItem ? (editItem.category || 'unisex') : 'unisex';
   const name = editItem ? editItem.name : '';
   const price = editItem ? editItem.price : '';
 
-  const previewImage = state._removePhoto ? null : (state._pendingImage || (editItem && editItem.image));
+  // Fresh mapping every time this screen is opened.
+  pendingVariantImages = {};
+  pendingMainImage = editItem ? (editItem.image || null) : null;
+  let groups;
+  if (editItem && editItem.colors && editItem.colors.length) {
+    groups = editItem.colors.map(v => {
+      const gid = uid();
+      pendingVariantImages[gid] = v.image || null;
+      return { gid, sizes: v.sizes || {} };
+    });
+  } else {
+    groups = [{ gid: uid(), sizes: {} }];
+  }
 
   let html = `<div class="form-card">
     <h3 style="margin-bottom:16px">${isEdit?'Edit item':'Add a new item'}</h3>
@@ -705,47 +753,30 @@ function renderAddForm(){
       </select>
     </div>
 
-    <div class="field">
-      <label>Photo</label>
-      <div class="photo-row">
-        <div id="imgPreviewWrap">
-          ${previewImage
-            ? `<img id="imgPreview" src="${previewImage}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--line)">`
-            : `<div id="imgPreview" style="width:80px;height:80px;border-radius:8px;background:#f2f0eb;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-size:11px;text-align:center;padding:4px">No photo</div>`}
+    <div class="field"><label>Main photo (cover image)</label>
+      <div class="item-photo-row">
+        <div class="item-photo-preview" id="mainPhotoPreview">
+          ${pendingMainImage ? `<img src="${pendingMainImage}" alt="">` : `<div class="item-photo-placeholder">📷<br>No photo</div>`}
         </div>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <input type="file" accept="image/*" id="f-image-file">
-          <div id="removePhotoWrap" style="${previewImage ? '' : 'display:none'}">
-            <button type="button" class="ghost" style="padding: 6px 12px; font-size: 12px; min-height:auto;" id="removePhoto">Remove photo</button>
+        <div class="item-photo-actions">
+          <label class="ghost photo-upload-label" for="f-main-image">${pendingMainImage ? 'Change photo' : 'Upload photo'}</label>
+          <input type="file" accept="image/*" id="f-main-image" style="display:none">
+          <div id="removeMainPhotoWrap" style="${pendingMainImage ? '' : 'display:none'}">
+            <button type="button" class="ghost" style="padding: 6px 12px; font-size: 12px; min-height:auto; color:var(--danger)" id="removeMainPhoto">Remove photo</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="field"><label>Colors &amp; Stock Levels</label>
+    <div class="field"><label>Colours — one photo &amp; stock levels per colour</label>
       <div id="colorGroupsWrap">`;
 
-  colorGroups.forEach((group, gIdx)=>{
-    const existingSizesArray = Object.keys(group.sizes);
-    html += `
-    <div class="color-group" data-idx="${gIdx}">
-      <div class="color-group-header">
-        <input type="color" class="g-hex" value="${esc(group.hex)}">
-        <input type="text" class="g-name" placeholder="Color Name (e.g. Royal Blue)" value="${esc(group.name)}">
-        <button type="button" class="ghost remove-color-group">✕ Remove</button>
-      </div>
-      <div class="size-adder-row">
-        <span style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">Add size:</span>
-        <select class="size-dropdown-selector">${renderDropdownOptions(sizeType, existingSizesArray)}</select>
-      </div>
-      <div class="added-sizes-list">
-        ${existingSizesArray.map(sz => renderAddedSizeRow(sz, group.sizes[sz])).join('')}
-      </div>
-    </div>`;
+  groups.forEach(g => {
+    html += `<div class="color-group" data-gid="${g.gid}">${colorGroupInnerHtml(g.gid, sizeType, g.sizes, pendingVariantImages[g.gid])}</div>`;
   });
 
   html += `</div>
-      <button type="button" class="link" id="addColorGroup">+ Add Another Color</button>
+      <button type="button" class="link" id="addColorGroup">+ Add Another Colour</button>
     </div>
     <div class="form-actions">
       <button class="primary" id="saveItemBtn">${isEdit?'Save changes':'Add to inventory'}</button>
@@ -784,44 +815,74 @@ function renderModal(){
   wrap.className = 'overlay';
   wrap.id = 'overlay';
 
+  // ---- staff photo viewer: swipeable / tap-thumbnail carousel ----
   if (modal.type === 'detail') {
-    const colorGroups = groupColors(item.colors);
-    wrap.innerHTML = `<div class="modal">
-      <div class="modal-title-row">
-        <h3>${esc(item.name)}</h3>
-      </div>
-      ${thumbHtml(item, null, true)}
-      <div style="display:flex; align-items:center; gap:10px; margin:12px 0 4px;">
-        <span class="cat-badge">${catLabel(item.category)}</span>
-        ${stockBadgeHtml(item)}
-      </div>
-      <div class="price-tag" style="margin-bottom:14px">Rs. ${Number(item.price).toLocaleString()}</div>
-      ${colorGroups.map(g => `
-        <div class="detail-color-block">
-          <div class="detail-color-head">
-            <span class="swatch-dot" style="background:${esc(g.hex)}"></span>${esc(g.name)}
-          </div>
-          <div class="detail-size-chips">
-            ${Object.entries(g.sizes).map(([sz, qty]) => `
-              <span class="detail-size-chip ${qty>0?'avail':'out'}">${esc(sz)}${qty>0?` · ${qty} left`:' · out'}</span>
-            `).join('')}
-          </div>
-        </div>
-      `).join('') || '<p class="sub">No colour or size information yet.</p>'}
-      <div class="form-actions"><button class="ghost" id="closeModal" style="width:100%">Close</button></div>
-    </div>`;
+    const slides = [];
+    if (item.image) slides.push({ image: item.image, sizes: aggregateSizes(item), isMain: true });
+    (item.colors || []).forEach((v, i) => slides.push({ image: v.image, sizes: v.sizes, isMain: false, colourNum: i + 1 }));
+    if (slides.length === 0) slides.push({ image: null, sizes: {}, isMain: true });
+
+    let idx = 0;
+
+    wrap.innerHTML = `<div class="modal" id="modalDynamicContainer"></div>`;
     document.body.appendChild(wrap);
-    document.getElementById('closeModal')?.addEventListener('click', closeModal);
+    const container = document.getElementById('modalDynamicContainer');
+
+    const update = () => {
+      const s = slides[idx];
+      const sizeEntries = s ? Object.entries(s.sizes || {}) : [];
+      container.innerHTML = `
+        <div class="modal-title-row"><h3>${esc(item.name)}</h3></div>
+        <div class="detail-main-image-wrap" id="detailMainImgWrap">
+          ${s && s.image ? `<img class="detail-main-image" src="${s.image}" alt="">` : `<div class="detail-main-placeholder">${esc(item.name).charAt(0).toUpperCase() || '?'}</div>`}
+        </div>
+        ${slides.length > 1 ? `<div class="detail-thumbs">
+          ${slides.map((sl,i) => `<button type="button" class="detail-thumb ${i===idx?'active':''}" data-idx="${i}">
+            ${sl.image ? `<img src="${sl.image}" alt="">` : ''}
+          </button>`).join('')}
+        </div>` : ''}
+        <div style="display:flex; align-items:center; gap:10px; margin:14px 0 4px;">
+          <span class="cat-badge">${catLabel(item.category)}</span>
+          ${stockBadgeHtml(item)}
+        </div>
+        <div class="price-tag" style="margin-bottom:6px">Rs. ${Number(item.price).toLocaleString()}</div>
+        ${s && s.isMain && item.colors && item.colors.length > 0 ? `<p class="sub" style="margin:4px 0 6px">Total across all colours:</p>` : ''}
+        <div class="detail-size-chips">
+          ${sizeEntries.length ? sizeEntries.map(([sz,qty]) => `<span class="detail-size-chip ${qty>0?'avail':'out'}">${esc(sz)}${qty>0?` · ${qty} left`:' · out'}</span>`).join('') : '<p class="sub" style="margin:8px 0 0">No size information yet.</p>'}
+        </div>
+        <div class="form-actions"><button class="ghost" id="closeModal" style="width:100%">Close</button></div>
+      `;
+      container.querySelectorAll('.detail-thumb').forEach(btn => {
+        btn.addEventListener('click', () => { idx = parseInt(btn.dataset.idx, 10); update(); });
+      });
+      document.getElementById('closeModal')?.addEventListener('click', closeModal);
+
+      const mainWrap = document.getElementById('detailMainImgWrap');
+      if (mainWrap && slides.length > 1) {
+        let touchStartX = null;
+        mainWrap.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
+        mainWrap.addEventListener('touchend', e => {
+          if (touchStartX === null) return;
+          const dx = e.changedTouches[0].clientX - touchStartX;
+          if (Math.abs(dx) > 40) {
+            idx = dx < 0 ? Math.min(idx+1, slides.length-1) : Math.max(idx-1, 0);
+            update();
+          }
+          touchStartX = null;
+        }, {passive:true});
+      }
+    };
+    update();
     wrap.addEventListener('click', e => { if (e.target.id === 'overlay') closeModal(); });
     return;
   }
 
   if (modal.type === 'sell') {
-    const colorGroups = groupColors(item.colors).filter(g => Object.values(g.sizes).some(qty => qty > 0));
+    const availableVariants = (item.colors || []).filter(v => Object.values(v.sizes||{}).some(q => q > 0));
 
-    if (colorGroups.length === 0) {
+    if (availableVariants.length === 0) {
       wrap.innerHTML = `<div class="modal">
-        <div class="modal-title-row">${thumbHtml(item,44)}<h3>Sell — ${esc(item.name)}</h3></div>
+        <div class="modal-title-row"><h3>Sell — ${esc(item.name)}</h3></div>
         <p class="empty" style="padding: 20px 0;">This item is fully out of stock.</p>
         <div class="form-actions"><button class="ghost" id="closeModal">Close</button></div>
       </div>`;
@@ -831,36 +892,36 @@ function renderModal(){
       return;
     }
 
-    let selColor = colorGroups[0].name;
-    let selSize = Object.keys(colorGroups[0].sizes).find(sz => colorGroups[0].sizes[sz] > 0);
+    let selVariantIdx = 0;
+    let selSize = Object.keys(availableVariants[0].sizes).find(sz => availableVariants[0].sizes[sz] > 0);
 
     wrap.innerHTML = `<div class="modal" id="modalDynamicContainer"></div>`;
     document.body.appendChild(wrap);
     const container = document.getElementById('modalDynamicContainer');
 
     const updateSellModalDOM = () => {
-      const activeGroup = colorGroups.find(g => g.name === selColor) || colorGroups[0];
+      const variant = availableVariants[selVariantIdx];
       container.innerHTML = `
-        <div class="modal-title-row">${thumbHtml(item,44)}<h3>Sell — ${esc(item.name)}</h3></div>
-        <div class="sub">Pick the color and size being bought.</div>
+        <div class="modal-title-row"><h3>Sell — ${esc(item.name)}</h3></div>
+        <div class="sub">Pick the colour and size being sold.</div>
         <div class="field">
-          <label>1. Select Color</label>
-          <div class="modal-swatches">
-            ${colorGroups.map(g => `
-              <button type="button" class="modal-swatch-btn ${g.name === selColor ? 'active' : ''}" data-color="${esc(g.name)}">
-                <span class="swatch-dot" style="background:${esc(g.hex)}"></span>${esc(g.name)}
+          <label>1. Select colour</label>
+          <div class="modal-variant-thumbs">
+            ${availableVariants.map((v,i) => `
+              <button type="button" class="modal-variant-thumb ${i===selVariantIdx?'active':''}" data-idx="${i}">
+                ${v.image ? `<img src="${v.image}" alt="">` : ''}
               </button>
             `).join('')}
           </div>
         </div>
         <div class="field">
-          <label>2. Select Size</label>
+          <label>2. Select size</label>
           <div class="modal-sizes">
-            ${Object.entries(activeGroup.sizes).map(([sz, qty]) => {
+            ${Object.entries(variant.sizes).map(([sz, qty]) => {
               const outOfStock = qty <= 0;
-              return `<button type="button" class="modal-size-btn ${sz === selSize ? 'active' : ''} ${outOfStock ? 'disabled' : ''}" data-size="${esc(sz)}" ${outOfStock ? 'disabled' : ''}>
-                  ${esc(sz)}<span class="qty-label">${outOfStock ? 'out' : qty + ' left'}</span>
-                </button>`;
+              return `<button type="button" class="modal-size-btn ${sz===selSize?'active':''} ${outOfStock?'disabled':''}" data-size="${esc(sz)}" ${outOfStock?'disabled':''}>
+                ${esc(sz)}<span class="qty-label">${outOfStock?'out':qty+' left'}</span>
+              </button>`;
             }).join('')}
           </div>
         </div>
@@ -871,11 +932,11 @@ function renderModal(){
           <button class="ghost" id="closeModal">Cancel</button>
         </div>
       `;
-      container.querySelectorAll('.modal-swatch-btn').forEach(btn => {
+      container.querySelectorAll('.modal-variant-thumb').forEach(btn => {
         btn.addEventListener('click', () => {
-          selColor = btn.getAttribute('data-color');
-          const newGroup = colorGroups.find(g => g.name === selColor);
-          selSize = Object.keys(newGroup.sizes).find(sz => newGroup.sizes[sz] > 0);
+          selVariantIdx = parseInt(btn.dataset.idx, 10);
+          const v = availableVariants[selVariantIdx];
+          selSize = Object.keys(v.sizes).find(sz => v.sizes[sz] > 0);
           updateSellModalDOM();
         });
       });
@@ -886,17 +947,18 @@ function renderModal(){
       document.getElementById('confirmSell')?.addEventListener('click', async () => {
         const qty = parseInt(document.getElementById('sellQty').value, 10);
         const buyer = document.getElementById('sellBuyer').value.trim();
-        const colorObj = item.colors.find(c => c.name === selColor && (c.size || 'Free size') === selSize);
-        if (!colorObj) { showToast('Invalid color or size picked.', true); return; }
+        const variant = availableVariants[selVariantIdx];
+        const currentQty = variant.sizes[selSize];
         if (!qty || qty < 1) { showToast('Enter a valid quantity', true); return; }
-        if (qty > colorObj.qty) { showToast(`Only ${colorObj.qty} left — can't sell ${qty}`, true); return; }
-        colorObj.qty -= qty;
+        if (qty > currentQty) { showToast(`Only ${currentQty} left — can't sell ${qty}`, true); return; }
+        variant.sizes[selSize] -= qty;
+        const colourNum = item.colors.indexOf(variant) + 1;
         const logId = uid();
-        const saleLogEntry = { id: logId, time: Date.now(), item: item.name, color: `${colorObj.name} (${colorObj.size || 'Free size'})`, qty, price: Number(item.price), buyer };
+        const saleLogEntry = { id: logId, time: Date.now(), item: item.name, color: `Colour ${colourNum} (${selSize})`, qty, price: Number(item.price), buyer };
         await cloudPut(`items/${item.id}`, item);
         await cloudPut(`log/${logId}`, saleLogEntry);
         closeModal();
-        showToast(`Sold ${qty} × ${colorObj.name} (${colorObj.size || 'Free size'}).`);
+        showToast(`Sold ${qty} × Colour ${colourNum} (${selSize}).`);
         syncFromCloud();
       });
     };
@@ -905,16 +967,24 @@ function renderModal(){
   }
 
   if (modal.type === 'restock') {
+    const variants = item.colors || [];
     wrap.innerHTML = `<div class="modal">
-      <div class="modal-title-row">${thumbHtml(item,44)}<h3>Restock — ${esc(item.name)}</h3></div>
-      <div class="sub">Add pieces to existing variants.</div>
+      <div class="modal-title-row"><h3>Restock — ${esc(item.name)}</h3></div>
+      <div class="sub">Add pieces to existing sizes.</div>
       <div id="restockRows">
-        ${item.colors ? item.colors.map((c,idx)=>`
-          <div class="color-row" data-idx="${idx}" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-            <span class="dot" style="background:${esc(c.hex)};width:12px;height:12px;border-radius:50%;display:inline-block;"></span>
-            <input type="text" value="${esc(c.name)} (${esc(c.size || 'Free size')})" disabled style="flex:1">
-            <input type="number" class="restock-add" min="0" placeholder="+ add" style="width:80px">
-          </div>`).join('') : ''}
+        ${variants.map((v, vi) => `
+          <div class="restock-variant-block">
+            <div class="restock-variant-head">
+              ${v.image ? `<img src="${v.image}" alt="">` : ''} Colour ${vi+1}
+            </div>
+            ${Object.keys(v.sizes||{}).map(sz => `
+              <div class="color-row" data-vidx="${vi}" data-size="${esc(sz)}" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                <input type="text" value="${esc(sz)} — currently ${v.sizes[sz]}" disabled style="flex:1">
+                <input type="number" class="restock-add" min="0" placeholder="+ add" style="width:80px">
+              </div>
+            `).join('')}
+          </div>
+        `).join('')}
       </div>
       <div class="form-actions">
         <button class="primary" id="confirmRestock">Save restock</button>
@@ -928,9 +998,10 @@ function renderModal(){
       const rows = wrap.querySelectorAll('#restockRows .color-row');
       let changed = false;
       rows.forEach(row=>{
-        const idx = parseInt(row.dataset.idx,10);
+        const vidx = parseInt(row.dataset.vidx,10);
+        const sz = row.dataset.size;
         const add = parseInt(row.querySelector('.restock-add').value, 10);
-        if (add && add > 0) { item.colors[idx].qty += add; changed = true; }
+        if (add && add > 0) { item.colors[vidx].sizes[sz] += add; changed = true; }
       });
       if (!changed) { showToast('Enter at least one quantity to add', true); return; }
       await cloudPut(`items/${item.id}`, item);
@@ -973,14 +1044,14 @@ function attachHandlers(){
   document.getElementById('switchToAdmin')?.addEventListener('click', ()=>{ state._loginError=''; state.role = 'admin_login'; render(); });
   document.getElementById('exitAdmin')?.addEventListener('click', ()=>{ state.role = null; state.tab = 'inventory'; state._editingId = null; render(); });
 
-  // ---- customer filters ----
+  // ---- staff filters ----
   document.querySelectorAll('.chip[data-cat]').forEach(btn => {
     btn.addEventListener('click', ()=>{ state.custCategory = btn.dataset.cat; render(); });
   });
   document.getElementById('custSearch')?.addEventListener('input', e => { state.search = e.target.value; render(); });
   document.getElementById('custSizeFilter')?.addEventListener('change', e => { state.custSize = e.target.value; render(); });
 
-  // ---- customer / shared: open item detail on thumbnail or view button ----
+  // ---- open item photo viewer (staff + admin card thumbnails) ----
   document.querySelectorAll('[data-thumb-id]').forEach(el => {
     el.addEventListener('click', () => {
       const item = state.items.find(i => i.id === el.getAttribute('data-thumb-id'));
@@ -999,7 +1070,7 @@ function attachHandlers(){
   document.querySelectorAll('nav.tabs button').forEach(b=>{
     b.addEventListener('click', ()=>{
       state.tab = b.dataset.tab;
-      if (b.dataset.tab === 'add') { state._editingId = null; state._pendingImage = null; state._removePhoto = false; }
+      if (b.dataset.tab === 'add') state._editingId = null;
       render();
     });
   });
@@ -1054,7 +1125,7 @@ function attachHandlers(){
       const action = btn.dataset.action;
       if (action === 'sell') { modal = {type:'sell', item}; render(); }
       if (action === 'restock') { modal = {type:'restock', item}; render(); }
-      if (action === 'edit') { state._editingId = id; state._pendingImage = null; state._removePhoto = false; state.tab = 'add'; render(); }
+      if (action === 'edit') { state._editingId = id; state.tab = 'add'; render(); }
       if (action === 'delete') {
         if (confirm(`Delete "${item.name}" from inventory? This can't be undone.`)) {
           fetch(`${FIREBASE_DB_URL}items/${id}.json`, { method: 'DELETE' }).then(()=>{
@@ -1069,107 +1140,106 @@ function attachHandlers(){
   // ---- admin: add/edit form ----
   const colorGroupsWrap = document.getElementById('colorGroupsWrap');
   if (colorGroupsWrap) {
+
+    document.getElementById('f-main-image')?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        pendingMainImage = await resizeImage(file);
+        const preview = document.getElementById('mainPhotoPreview');
+        if (preview) preview.innerHTML = `<img src="${pendingMainImage}" alt="">`;
+        const label = document.querySelector('label[for="f-main-image"]');
+        if (label) label.textContent = 'Change photo';
+        const removeWrap = document.getElementById('removeMainPhotoWrap');
+        if (removeWrap) removeWrap.style.display = '';
+      } catch (err) { showToast('Could not load that photo', true); }
+    });
+
+    document.getElementById('removeMainPhoto')?.addEventListener('click', () => {
+      pendingMainImage = null;
+      const preview = document.getElementById('mainPhotoPreview');
+      if (preview) preview.innerHTML = `<div class="item-photo-placeholder">📷<br>No photo</div>`;
+      const label = document.querySelector('label[for="f-main-image"]');
+      if (label) label.textContent = 'Upload photo';
+      const removeWrap = document.getElementById('removeMainPhotoWrap');
+      if (removeWrap) removeWrap.style.display = 'none';
+    });
+
     document.getElementById('f-sizeType')?.addEventListener('change', (e) => {
       const type = e.target.value;
-      document.querySelectorAll('.color-group').forEach((groupEl) => {
-        const dropdown = groupEl.querySelector('.size-dropdown-selector');
-        const listRows = groupEl.querySelectorAll('.added-size-row');
-        const activeSizes = Array.from(listRows).map(r => r.dataset.size);
-        dropdown.innerHTML = renderDropdownOptions(type, activeSizes);
+      document.querySelectorAll('.color-group').forEach(groupEl => {
+        const grid = groupEl.querySelector('.size-chip-grid');
+        grid.outerHTML = sizeChipGridHtml(type, {});
       });
     });
 
-    function attachSizeGroupInteraction(groupEl) {
-      const dropdown = groupEl.querySelector('.size-dropdown-selector');
-      const containerList = groupEl.querySelector('.added-sizes-list');
+    function attachVariantGroupInteraction(groupEl){
+      const gid = groupEl.dataset.gid;
 
-      dropdown.addEventListener('change', (e) => {
-        const selectedSize = e.target.value;
-        if (!selectedSize) return;
-        containerList.insertAdjacentHTML('beforeend', renderAddedSizeRow(selectedSize, 0));
-        const sizeType = document.getElementById('f-sizeType').value;
-        const activeSizes = Array.from(containerList.querySelectorAll('.added-size-row')).map(r => r.dataset.size);
-        dropdown.innerHTML = renderDropdownOptions(sizeType, activeSizes);
-        const targetRow = containerList.querySelector(`[data-size="${selectedSize}"]`);
-        targetRow.querySelector('.c-size-qty').focus();
+      groupEl.querySelector('.variant-file-input').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          const dataUrl = await resizeImage(file);
+          pendingVariantImages[gid] = dataUrl;
+          // Update just this group's preview + label — never call render() here.
+          const preview = groupEl.querySelector('.variant-photo-preview');
+          preview.innerHTML = `<img src="${dataUrl}" alt="">`;
+          const label = groupEl.querySelector('.photo-upload-label');
+          if (label) label.textContent = 'Change photo';
+        } catch (err) { showToast('Could not load that photo', true); }
       });
 
-      containerList.addEventListener('click', (e) => {
-        if (e.target.classList.contains('remove-size-row')) {
-          e.target.closest('.added-size-row').remove();
-          const sizeType = document.getElementById('f-sizeType').value;
-          const activeSizes = Array.from(containerList.querySelectorAll('.added-size-row')).map(r => r.dataset.size);
-          dropdown.innerHTML = renderDropdownOptions(sizeType, activeSizes);
+      groupEl.querySelector('.size-chip-grid').addEventListener('click', (e) => {
+        const plusBtn = e.target.closest('.stepper-btn.plus');
+        const minusBtn = e.target.closest('.stepper-btn.minus');
+        const inactiveChip = e.target.closest('.size-chip:not(.active)');
+
+        if (plusBtn) {
+          const chip = plusBtn.closest('.size-chip');
+          const qty = parseInt(chip.dataset.qty, 10) + 1;
+          chip.dataset.qty = qty;
+          chip.querySelector('.stepper-qty').textContent = qty;
+          return;
+        }
+        if (minusBtn) {
+          const chip = minusBtn.closest('.size-chip');
+          const qty = parseInt(chip.dataset.qty, 10) - 1;
+          if (qty <= 0) chip.outerHTML = inactiveSizeChipHtml(chip.dataset.size);
+          else { chip.dataset.qty = qty; chip.querySelector('.stepper-qty').textContent = qty; }
+          return;
+        }
+        if (inactiveChip) { inactiveChip.outerHTML = activeSizeChipHtml(inactiveChip.dataset.size, 1); return; }
+      });
+
+      groupEl.querySelector('.remove-color-group').addEventListener('click', () => {
+        if (document.querySelectorAll('.color-group').length > 1) {
+          delete pendingVariantImages[gid];
+          groupEl.remove();
+        } else {
+          showToast('You must keep at least one colour.', true);
         }
       });
     }
 
-    document.querySelectorAll('.color-group').forEach(groupEl => {
-      attachSizeGroupInteraction(groupEl);
-      groupEl.querySelector('.remove-color-group').addEventListener('click', () => {
-        if (document.querySelectorAll('.color-group').length > 1) groupEl.remove();
-        else showToast("You must keep at least one color variation.", true);
-      });
-    });
+    document.querySelectorAll('.color-group').forEach(attachVariantGroupInteraction);
 
     document.getElementById('addColorGroup')?.addEventListener('click', ()=>{
       const type = document.getElementById('f-sizeType').value;
-      const newIdx = document.querySelectorAll('.color-group').length;
+      const gid = uid();
+      pendingVariantImages[gid] = null;
       const tempDiv = document.createElement('div');
       tempDiv.className = 'color-group';
-      tempDiv.dataset.idx = newIdx;
-      tempDiv.innerHTML = `
-        <div class="color-group-header">
-          <input type="color" class="g-hex" value="#1f6f5c">
-          <input type="text" class="g-name" placeholder="Color Name (e.g. Royal Blue)">
-          <button type="button" class="ghost remove-color-group">✕ Remove</button>
-        </div>
-        <div class="size-adder-row">
-          <span style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">Add size:</span>
-          <select class="size-dropdown-selector">${renderDropdownOptions(type, [])}</select>
-        </div>
-        <div class="added-sizes-list"></div>
-      `;
+      tempDiv.dataset.gid = gid;
+      tempDiv.innerHTML = colorGroupInnerHtml(gid, type, {}, null);
       colorGroupsWrap.appendChild(tempDiv);
-      attachSizeGroupInteraction(tempDiv);
-      tempDiv.querySelector('.remove-color-group').addEventListener('click', () => {
-        if (document.querySelectorAll('.color-group').length > 1) tempDiv.remove();
-        else showToast("You must keep at least one color variation.", true);
-      });
-    });
-
-    document.getElementById('f-image-file')?.addEventListener('change', async (e)=>{
-      const file = e.target.files[0];
-      if (!file) return;
-      try {
-        state._pendingImage = await resizeImage(file);
-        state._removePhoto = false;
-        // Update only the preview thumbnail in place — do NOT call render() here.
-        // A full re-render would rebuild the whole Add Item form from scratch,
-        // which silently clears the name/price/colors you've already typed
-        // (that was the cause of the "item name is required" bug).
-        const wrap = document.getElementById('imgPreviewWrap');
-        if (wrap) {
-          wrap.innerHTML = `<img id="imgPreview" src="${state._pendingImage}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--line)">`;
-        }
-        const removeWrap = document.getElementById('removePhotoWrap');
-        if (removeWrap) removeWrap.style.display = '';
-      } catch(err){ showToast('Could not load that photo', true); }
-    });
-
-    document.getElementById('removePhoto')?.addEventListener('click', ()=>{
-      state._pendingImage = null; state._removePhoto = true;
-      // Same reasoning as above: update the DOM in place, don't re-render the form.
-      const wrap = document.getElementById('imgPreviewWrap');
-      if (wrap) {
-        wrap.innerHTML = `<div id="imgPreview" style="width:80px;height:80px;border-radius:8px;background:#f2f0eb;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-size:11px;text-align:center;padding:4px">No photo</div>`;
-      }
-      const removeWrap = document.getElementById('removePhotoWrap');
-      if (removeWrap) removeWrap.style.display = 'none';
+      attachVariantGroupInteraction(tempDiv);
     });
 
     document.getElementById('cancelFormBtn')?.addEventListener('click', ()=>{
-      state._editingId = null; state._pendingImage = null; state._removePhoto = false;
+      state._editingId = null;
+      pendingVariantImages = {};
+      pendingMainImage = null;
       state.tab = 'inventory'; render();
     });
 
@@ -1190,33 +1260,26 @@ function attachHandlers(){
       if (isNaN(price) || price < 0) { showToast('Enter a valid price', true); priceInput.focus(); return; }
 
       const colors = [];
-      let missingColorName = false;
-      let anySizeSelected = false;
+      let missingPhoto = false;
+      let missingSizes = false;
 
       document.querySelectorAll('.color-group').forEach(groupEl => {
-        const colorName = groupEl.querySelector('.g-name').value.trim();
-        const hex = groupEl.querySelector('.g-hex').value;
-        if (!colorName) { missingColorName = true; return; }
-        groupEl.querySelectorAll('.added-size-row').forEach(row => {
-          anySizeSelected = true;
-          const size = row.dataset.size;
-          const qtyVal = parseInt(row.querySelector('.c-size-qty').value, 10);
-          colors.push({ name: colorName, hex, size, qty: isNaN(qtyVal) ? 0 : qtyVal });
-        });
+        const gid = groupEl.dataset.gid;
+        const image = pendingVariantImages[gid] || null;
+        const activeChips = groupEl.querySelectorAll('.size-chip.active');
+        const sizes = {};
+        activeChips.forEach(chip => { sizes[chip.dataset.size] = parseInt(chip.dataset.qty, 10) || 0; });
+
+        if (!image) missingPhoto = true;
+        if (Object.keys(sizes).length === 0) missingSizes = true;
+        colors.push({ variantId: gid, image, sizes });
       });
 
-      if (missingColorName) { showToast('Please enter a name for all your added colors', true); return; }
-      if (!anySizeSelected) { showToast('Please add at least one size variant with a quantity', true); return; }
-
-      let image = null;
-      if (state._pendingImage) image = state._pendingImage;
-      else if (state._editingId && !state._removePhoto) {
-        const existing = state.items.find(i=>i.id===state._editingId);
-        image = existing ? existing.image : null;
-      }
+      if (missingPhoto) { showToast('Please add a photo for every colour', true); return; }
+      if (missingSizes) { showToast('Please select at least one size for each colour', true); return; }
 
       const itemId = state._editingId || uid();
-      const itemData = { id: itemId, name, price, category, sizeType, colors, image };
+      const itemData = { id: itemId, name, price, category, sizeType, image: pendingMainImage || null, colors };
 
       state._saving = true;
       const btn = document.getElementById('saveItemBtn');
@@ -1226,7 +1289,9 @@ function attachHandlers(){
       showToast(state._editingId ? 'Item updated' : 'Item added to cloud inventory');
 
       state._saving = false;
-      state._editingId = null; state._pendingImage = null; state._removePhoto = false;
+      state._editingId = null;
+      pendingVariantImages = {};
+      pendingMainImage = null;
       state.tab = 'inventory';
       syncFromCloud();
     });
