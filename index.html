@@ -675,9 +675,9 @@ function renderCustomerApp(){
   } else if (filtered.length === 0) {
     html += `<div class="empty"><h3>No matches</h3><p>Try a different search, category, or size.</p></div>`;
   } else {
-    html += '<div class="grid">';
+    html += '<div class="grid" id="customerGrid">';
     for (const item of filtered) {
-      html += `<div class="card">
+      html += `<div class="card" data-item-name="${esc(item.name.toLowerCase())}">
         ${cardPhotoHtml(item)}
         <div class="cat-badge">${catLabel(item.category)}</div>
         <div class="item-name">${esc(item.name)}</div>
@@ -1114,7 +1114,28 @@ function attachHandlers(){
   document.querySelectorAll('.chip[data-cat]').forEach(btn => {
     btn.addEventListener('click', ()=>{ state.custCategory = btn.dataset.cat; render(); });
   });
-  document.getElementById('custSearch')?.addEventListener('input', e => { state.search = e.target.value; render(); });
+  document.getElementById('custSearch')?.addEventListener('input', e => {
+    const query = e.target.value.trim().toLowerCase();
+    state.search = e.target.value;
+    const grid = document.getElementById('customerGrid');
+    if (!grid) return; // e.g. currently showing the "no stock yet" / "no matches" empty state
+    const cards = grid.querySelectorAll('.card[data-item-name]');
+    let visibleCount = 0;
+    cards.forEach(card => {
+      const name = card.getAttribute('data-item-name') || '';
+      if (name.includes(query)) { card.style.display = ''; visibleCount++; }
+      else { card.style.display = 'none'; }
+    });
+    let noMatch = document.getElementById('custNoMatches');
+    if (visibleCount === 0 && cards.length > 0) {
+      if (!noMatch) {
+        const msg = document.createElement('div');
+        msg.className = 'empty'; msg.id = 'custNoMatches';
+        msg.innerHTML = `<h3>No matches</h3><p>Try a different search, category, or size.</p>`;
+        grid.appendChild(msg);
+      }
+    } else if (noMatch) { noMatch.remove(); }
+  });
   document.getElementById('custSizeFilter')?.addEventListener('change', e => { state.custSize = e.target.value; render(); });
 
   // ---- open item photo viewer (staff + admin card thumbnails) ----
