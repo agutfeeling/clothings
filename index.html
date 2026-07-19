@@ -143,7 +143,9 @@
   }
   .card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.04); }
   .card-head { display: flex; align-items: center; gap: 12px; }
-  .item-name { font-family: 'Fraunces', Georgia, serif; font-size: 16.5px; font-weight: 600; line-height: 1.25; }
+  .item-name { font-family: 'Fraunces', Georgia, serif; font-size: 13.5px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-photo { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 10px; cursor: pointer; display: block; }
+  .card-photo-placeholder { width: 100%; aspect-ratio: 1 / 1; border-radius: 10px; background: var(--amber-soft); color: var(--gold); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', Georgia, serif; font-weight: 700; font-size: 40px; cursor: pointer; }
   .price-tag {
     font-family: 'IBM Plex Mono', monospace; background: var(--amber-soft); color: var(--gold);
     border: 1px solid #ecd9ad; padding: 3px 8px; border-radius: 20px; font-size: 12px; font-weight: 600;
@@ -360,7 +362,11 @@ function normalizeItem(raw){
     const order = [];
     colors.forEach(c => {
       const key = (c.name || '') + '_' + (c.hex || '');
-      if (!groups[key]) { groups[key] = { variantId: uid(), image: raw.image || null, sizes: {} }; order.push(key); }
+      // Deterministic ID derived from the colour name/hex — NOT uid(), which
+      // is time-based and would generate a different ID on every single
+      // fetch, making the item look "changed" every 8 seconds even when
+      // nothing actually changed, and defeating the sync flicker fix below.
+      if (!groups[key]) { groups[key] = { variantId: 'legacy_' + key.replace(/[^a-zA-Z0-9]/g, '_'), image: raw.image || null, sizes: {} }; order.push(key); }
       groups[key].sizes[c.size || 'Free size'] = c.qty;
     });
     colors = order.map(k => groups[k]);
@@ -463,6 +469,15 @@ function thumbHtml(item, size){
   if (img) return `<img class="thumb" style="width:${size}px;height:${size}px" ${clickable} src="${cloudinaryUrl(img, `w_${size*2},q_auto,f_auto,c_fill`)}" alt="${esc(item.name)}">`;
   const initial = ((item && item.name) || '?').trim().charAt(0).toUpperCase() || '?';
   return `<div class="thumb-placeholder" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.4)}px" ${clickable}>${initial}</div>`;
+}
+
+// Large square photo for the top of a grid card (staff/admin browsing views).
+function cardPhotoHtml(item){
+  const img = firstImage(item);
+  const clickable = `data-thumb-id="${item.id}"`;
+  if (img) return `<img class="card-photo" ${clickable} src="${cloudinaryUrl(img, 'w_500,q_auto,f_auto,c_fill,ar_1:1')}" alt="${esc(item.name)}">`;
+  const initial = ((item && item.name) || '?').trim().charAt(0).toUpperCase() || '?';
+  return `<div class="card-photo-placeholder" ${clickable}>${initial}</div>`;
 }
 
 function cloudinaryConfigured(){
@@ -663,15 +678,13 @@ function renderCustomerApp(){
     html += '<div class="grid">';
     for (const item of filtered) {
       html += `<div class="card">
-        <div class="card-head">
-          ${thumbHtml(item, 60)}
-          <div style="flex:1;min-width:0">
-            <div class="cat-badge">${catLabel(item.category)}</div>
-            <div class="item-name">${esc(item.name)}</div>
-            <div class="price-tag">Rs. ${Number(item.price).toLocaleString()}</div>
-          </div>
+        ${cardPhotoHtml(item)}
+        <div class="cat-badge">${catLabel(item.category)}</div>
+        <div class="item-name">${esc(item.name)}</div>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <div class="price-tag">Rs. ${Number(item.price).toLocaleString()}</div>
+          ${stockBadgeHtml(item)}
         </div>
-        ${stockBadgeHtml(item)}
         <button class="ghost" data-thumb-id="${item.id}" style="width:100%">View photos &amp; availability</button>
       </div>`;
     }
@@ -730,14 +743,10 @@ function renderInventory(){
     for (const item of items) {
       const total = totalStock(item);
       html += `<div class="card" data-item-name="${esc(item.name.toLowerCase())}">
-        <div class="card-head">
-          ${thumbHtml(item, 56)}
-          <div style="flex:1;min-width:0">
-            <div class="cat-badge">${catLabel(item.category)}</div>
-            <div class="item-name">${esc(item.name)}</div>
-            <div class="price-tag">Rs. ${Number(item.price).toLocaleString()}</div>
-          </div>
-        </div>
+        ${cardPhotoHtml(item)}
+        <div class="cat-badge">${catLabel(item.category)}</div>
+        <div class="item-name">${esc(item.name)}</div>
+        <div class="price-tag">Rs. ${Number(item.price).toLocaleString()}</div>
         <div class="total-stock">Total available: <b>${total}</b> piece${total===1?'':'s'}</div>
         <button type="button" class="breakdown-toggle-btn" data-target="breakdown-${item.id}">Stock Breakdown</button>
         <div class="breakdown-panel" id="breakdown-${item.id}">
